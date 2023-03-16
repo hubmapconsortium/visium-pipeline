@@ -197,18 +197,21 @@ def main(
         barcode_file = f'/opt/visium-v{visium_plate_version}.txt'
         r1_fastq_file, r2_fastq_file = fastq_pairs[0]
         BWA_COMMAND = f"bwa-mem -M -t 2 {index} {r1_fastq_file} {r2_fastq_file} > out.sam"
+        check_call(BWA_COMMAND)
 
-        tx2_gene_mapping = pd.read_csv(transcript_map, sep='\t')
+        tx2_gene_mapping = pd.read_csv(transcript_map, sep='\t', names=['unique', 'original']).set_index('unique')
         with simplesam.Reader(open('out.sam')) as in_sam:
             with simplesam.Writer(open('mapped.sam', 'w')) as out_sam:
                 for read in in_sam:
                     if read.mapped:
                         ensembl_id = str(read).split('\t')[2]
-                        read['XT'] = ensembl_id
+                        read['XT'] = tx2_gene_mapping.at['original', ensembl_id]
                         out_sam.write(read)
 
         SAMTOOLS_COMMAND = "samtools view -S -b mapped.sam > mapped.bam && samtools sort mapped.bam -o sorted.bam && samtools index sorted.bam"
+        check_call(SAMTOOLS_COMMAND)
         UMI_DEDUP_COMMAND = "umi_tools dedup --per-gene --gene-tag=XT --assigned-status-tag=XS --per-cell -I assigned_sorted.bam -S counts.tsv.gz"
+        check_call(UMI_DEDUP_COMMAND)
 
         adata = anndata.read_umi_tools("counts.tsv.gz")
         adata.write("expr.h5ad")
