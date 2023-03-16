@@ -1,0 +1,4 @@
+hubmap/visium-barcode-adj docker/barcode_adj/Dockerfile  base_directory_build
+hubmap/visium-analysis docker/analysis/Dockerfile	base_directory_build
+hubmap/visium-trim-reads	docker/trim_reads/Dockerfile	base_directory_build
+hubmap/visium-grch38	docker/salmon/Dockerfile	base_directory_build
