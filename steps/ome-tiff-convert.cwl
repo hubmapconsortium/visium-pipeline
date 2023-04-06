@@ -12,8 +12,12 @@ inputs:
   data_dir:
     label: "Directory containing tiff file"
     type: Directory[]
+    inputBinding:
+      position: 1
 outputs:
   ome_tiff_file:
     type: File
+    outputBinding:
+      glob: "*.ome.tiff"
     label: "Visium image in ome-tiff format"
 
