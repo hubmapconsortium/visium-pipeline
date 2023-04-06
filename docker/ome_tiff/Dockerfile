@@ -16,4 +16,4 @@ WORKDIR /opt
 RUN unzip bftools.zip \
  && rm bftools.zip
 
-COPY bin/bftools_wrapper.py /opt
+COPY bin/ome-tiff/convert_ome_tiff.py /opt
