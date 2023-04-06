@@ -29,7 +29,7 @@ def find_ome_tiffs(input_dir: Path) -> Iterable[Tuple[Path, Path]]:
         dirpath = Path(dirpath_str)
         for filename in filenames:
             if ome_tiff_pattern.match(filename):
-                src_filepath = dirpath / filename.replace
+                src_filepath = dirpath / filename
                 dest_filepath = dirpath / filename.replace(".tiff", ".ome.tiff")
                 yield src_filepath, dest_filepath.relative_to(input_dir)
 
