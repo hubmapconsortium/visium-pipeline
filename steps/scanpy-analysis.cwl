@@ -15,6 +15,10 @@ inputs:
     type: File
     inputBinding:
       position: 1
+  orig_fastq_dir:
+    type: Directory
+    inputBinding:
+      position: 2
 outputs:
   filtered_data_h5ad:
     type: File
