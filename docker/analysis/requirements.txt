@@ -1,5 +1,6 @@
 anndata~=0.8.0
 biopython~=1.79
+cv2
 h5py~=3.6.0
 leidenalg~=0.8.9
 manhole~=1.8
@@ -10,6 +11,7 @@ numpy<1.22
 pandas~=1.4.1
 scanpy~=1.8.2
 scipy~=1.8.0
+sklearn
 scvelo~=0.2.4
 tables~=3.7.0
 umap-learn~=0.5.2
