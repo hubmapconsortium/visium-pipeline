@@ -292,7 +292,7 @@ def read_visium_pos(dataset_dir: Path, cutoff=0.0) -> pd.DataFrame:
     gpr_df = get_gpr_df(dataset_dir, threshold)
     gpr_df = gpr_df.set_index(['Column', 'Row'], inplace=False, drop=True)
     plate_version_number = gpr_file.stem[1]
-    barcode_coords_file = Path(f"/opt/data/visium-v{plate_version_number}_coordinates.txt")
+    barcode_coords_file = Path(f"/opt/visium-v{plate_version_number}_coordinates.txt")
     coords_df = pd.read_csv(barcode_coords_file, sep='\t', names=['barcode', 'Column', 'Row'])
     coords_df['Row'] = coords_df['Row'] + 1
     coords_df['Row'] = coords_df['Row'] // 2
