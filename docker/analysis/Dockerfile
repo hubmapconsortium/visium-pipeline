@@ -19,6 +19,7 @@ RUN apt-get update \
     python3 \
     python3-dev \
     python3-pip \
+    wget \
     zlib1g-dev \
  && rm -rf /var/cache/apt/*
 
@@ -27,8 +28,13 @@ COPY docker/analysis/requirements.txt /opt/requirements.txt
 RUN pip3 install -r /opt/requirements.txt \
  && rm -rf /root/.cache/pip
 
-COPY data /opt/data
 COPY bin/common /opt
 COPY bin/analysis /opt
 
 WORKDIR /opt
+
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/visium-v1_coordinates.txt
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/visium-v2_coordinates.txt
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/visium-v3_coordinates.txt
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/visium-v4_coordinates.txt
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/visium-v5_coordinates.txt

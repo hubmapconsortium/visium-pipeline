@@ -20,12 +20,15 @@ RUN wget https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/visium/visium-v2
 RUN wget https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/visium/visium-v3.txt
 RUN wget https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/visium/visium-v4.txt
 RUN wget https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/visium/visium-v5.txt
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/v1.fasta
 
 COPY docker/quantification/requirements.txt /opt/requirements.txt
 RUN python3 -m pip install -r /opt/requirements.txt \
  && rm -rf /root/.cache/pip
 
 RUN conda install -c bioconda samtools
+RUN conda install -c bioconda bwa
+
 
 RUN mkdir /out
 

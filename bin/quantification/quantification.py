@@ -175,10 +175,7 @@ def main(
     visium_plate_version = get_visium_plate_version(orig_fastq_dirs[0])
     visium_probe_set_version = get_visium_probe_set_version(orig_fastq_dirs[0], visium_probe_set_version)
 
-    transcript_map = f"/opt/visiumv{visium_probe_set_version}.tx2gene.tsv" if assay in {Assay.VISIUM_FFPE} else base_transcript_map
-    index_dir = f"/opt/visium_v{visium_probe_set_version}_index/"
-    index = index_dir if assay in {Assay.VISIUM_FFPE} else base_index
-
+    index = f"/opt/v{visium_probe_set_version}.fasta"
 
     fastq_pairs = list(find_grouped_fastq_files(trimmed_fastq_dir, 2))
 
@@ -196,21 +193,24 @@ def main(
     if assay in {Assay.VISIUM_FFPE, Assay.VISIUM_FF}:
         barcode_file = f'/opt/visium-v{visium_plate_version}.txt'
         r1_fastq_file, r2_fastq_file = fastq_pairs[0]
-        BWA_COMMAND = f"bwa-mem -M -t 2 {index} {r1_fastq_file} {r2_fastq_file} > out.sam"
+        BWA_INDEX_COMMAND = f"bwa index {index}"
+        UMI_EXTRACT_COMMAND = f"umi_tools extract --extract-method=string --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNNNN --stdin {r1_fastq_file} --stdout extracted_barcode_umi.fastq.gz --read2-in={r2_fastq_file} --read2-out=extracted_transcript.tar.gz"        check_call(UMI_EXTRACT_COMMAND, shell=True)
+
+        check_call(BWA_INDEX_COMMAND)
+        BWA_COMMAND = f"bwa mem -M -t {threads} {index} {r1_fastq_file} {r2_fastq_file} > out.sam"
         check_call(BWA_COMMAND)
 
-        tx2_gene_mapping = pd.read_csv(transcript_map, sep='\t', names=['unique', 'original']).set_index('unique')
         with simplesam.Reader(open('out.sam')) as in_sam:
             with simplesam.Writer(open('mapped.sam', 'w')) as out_sam:
                 for read in in_sam:
                     if read.mapped:
                         ensembl_id = str(read).split('\t')[2]
-                        read['XT'] = tx2_gene_mapping.at['original', ensembl_id]
+                        read['XT'] = ensembl_id
                         out_sam.write(read)
 
-        SAMTOOLS_COMMAND = "samtools view -S -b mapped.sam > mapped.bam && samtools sort mapped.bam -o sorted.bam && samtools index sorted.bam"
+        SAMTOOLS_COMMAND = f"samtools view -S -b mapped.sam > mapped.bam && samtools sort -@ {threads} mapped.bam -o sorted.bam && samtools index sorted.bam"
         check_call(SAMTOOLS_COMMAND)
-        UMI_DEDUP_COMMAND = "umi_tools dedup --per-gene --gene-tag=XT --assigned-status-tag=XS --per-cell -I assigned_sorted.bam -S counts.tsv.gz"
+        UMI_DEDUP_COMMAND = "umi_tools count --per-gene --gene-tag=XT --per-cell -I assigned_sorted.bam -S counts.tsv.gz"
         check_call(UMI_DEDUP_COMMAND)
 
         adata = anndata.read_umi_tools("counts.tsv.gz")

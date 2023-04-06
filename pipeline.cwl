@@ -24,22 +24,10 @@ inputs:
   visium_probe_set_version:
     type: int?
 outputs:
-  salmon_output:
-    outputSource: salmon_quantification/salmon_output
-    type: Directory
-    label: "Full output of `salmon alevin`"
   count_matrix_h5ad:
     outputSource: salmon_quantification/count_matrix_h5ad
     type: File
     label: "Unfiltered count matrix from Alevin, converted to H5AD, spliced and unspliced counts"
-  raw_count_matrix:
-    outputSource: salmon_quantification/raw_count_matrix
-    type: File?
-    label: "Unfiltered count matrix from Alevin, converted to H5AD, with intronic counts as separate columns"
-  genome_build_json:
-    outputSource: salmon_quantification/genome_build_json
-    type: File
-    label: "Genome build information in JSON format"
   fastqc_dir:
     outputSource: fastqc/fastqc_dir
     type: Directory[]
@@ -84,14 +72,8 @@ outputs:
     outputSource: scanpy_analysis/marker_gene_plot_logreg
     type: File
     label: "Cluster marker genes, logreg method"
-  scvelo_annotated_h5ad:
-    outputSource: scvelo_analysis/annotated_h5ad_file
-    type: File?
-    label: "scVelo-annotated h5ad file, including cell RNA velocity"
-  scvelo_embedding_grid_plot:
-    outputSource: scvelo_analysis/embedding_grid_plot
-    type: File?
-    label: "scVelo velocity embedding grid plot"
+  ome_tiff_file
+    outputSource: ome_tiff/ome_tiff_file
 steps:
   adjust_barcodes:
     in:
@@ -175,3 +157,11 @@ steps:
       - qc_metrics
     run: steps/compute-qc-metrics.cwl
     label: "Compute QC metrics"
+  ome_tiff:
+    in:
+      data_dir:
+        source: fastq_dir
+    out:
+      - ome_tiff_file
+    run steps/ome-tiff-convert.cwl
+    label: "Convert tiff image to ome tiff"

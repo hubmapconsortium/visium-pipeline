@@ -4,5 +4,6 @@ pandas
 manhole~=1.8
 scanpy
 simplesam
+umi_tools
 
 git+https://github.com/hubmapconsortium/fastq-utils@v0.2.3

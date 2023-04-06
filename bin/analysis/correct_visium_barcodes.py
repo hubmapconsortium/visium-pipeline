@@ -13,12 +13,11 @@ from common import BARCODE_UMI_FASTQ_PATH, TRANSCRIPT_FASTQ_PATH
 BARCODE_LENGTH = 16
 BARCODE_STARTS = [12]
 BARCODE_SEGMENTS = [slice(start, start + BARCODE_LENGTH) for start in BARCODE_STARTS]
-UMI_SEGMENT = slice(0, 10)
+UMI_SEGMENT = slice(16, 28)
 
 BARCODE_QUAL_DUMMY = "F" * BARCODE_LENGTH * len(BARCODE_STARTS)
 
 DATA_DIR = Path(__file__).parent / "data/snareseq"
-N6_DT_MAPPING_FILE = DATA_DIR / "R1_dTN6_pairs.txt"
 
 
 class KeyDefaultDict(dict):
@@ -35,10 +34,9 @@ def read_barcode_allowlist(barcode_filename: Path) -> Set[str]:
 
 def main(
     fastq_dirs: Iterable[Path],
-    visium_version_number: int,
+    visium_version_number: int = 1,
     output_dir: Path = Path(),
     barcode_filename: Path = Path(),
-    n6_dt_mapping_file: Path = N6_DT_MAPPING_FILE,
 ):
     barcode_filename = f"visium-v{visium_version_number}.txt"
     BARCODE_ALLOWLIST_FILE = DATA_DIR / Path(barcode_filename)
@@ -70,7 +68,7 @@ def main(
                     new_seq = "".join(corrected + [umi_seq])
                     new_qual = BARCODE_QUAL_DUMMY + umi_qual
                     new_br = Read(
-                        read_id=br.read_id.replace('1:N:0', 'BC:Z:'),
+                        read_id=br.read_id,
                         seq=new_seq,
                         unused=br.unused,
                         qual=new_qual,
@@ -88,8 +86,7 @@ if __name__ == "__main__":
 
     p = ArgumentParser()
     p.add_argument("fastq_dirs", type=Path, nargs="+")
-    p.add_argument("visium_version_number", type=int)
-    p.add_argument("--n6_dt_mapping_file", type=Path, default=N6_DT_MAPPING_FILE)
+    p.add_argument("visium_version_number", type=int, default=1)
     args = p.parse_args()
 
     main(

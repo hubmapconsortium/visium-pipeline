@@ -1,86 +1,63 @@
-#!/usr/bin/env cwl-runner
-
-class: Workflow
 cwlVersion: v1.0
-label: Salmon quantification, FASTQ -> H5AD count matrix
+class: CommandLineTool
+requirements:
+  DockerRequirement:
+    dockerPull: hubmap/visium-quantification
+  ResourceRequirement:
+    ramMin: 28672
+baseCommand: /opt/quantification.py
+label: Run Salmon Alevin tool on FASTQ input
+
+# arguments are hardcoded in salmon_wrapper.py
+
 inputs:
-  fastq_dir:
-    label: "Directory containing FASTQ files"
-    type: Directory[]
   assay:
-    label: "scRNA-seq assay"
     type: string
+    inputBinding:
+      position: 0
+  adj_fastq_dir:
+    type: Directory
+    inputBinding:
+      position: 1
+  orig_fastq_dirs:
+    type: Directory[]
+    inputBinding:
+      position: 2
   threads:
-    label: "Number of threads for Salmon"
     type: int
-    default: 1
+    inputBinding:
+      position: 3
+      prefix: "--threads"
   expected_cell_count:
     type: int?
+    inputBinding:
+      position: 4
+      prefix: "--expected-cell-count"
   keep_all_barcodes:
     type: boolean?
+    inputBinding:
+      position: 5
+      prefix: "--keep-all-barcodes"
   visium_probe_set_version:
     type: int?
-outputs:
-  count_matrix_h5ad:
-    outputSource: annotate_cells/annotated_h5ad_file
-    type: File
-    label: "Unfiltered count matrix from Alevin, converted to H5AD, spliced and unspliced counts"
-  bam_file:
-    outputSource: quantifi
+    inputBinding:
+      position: 6
+      prefix: "--visium-probe-set-version"
 
-steps:
-  trim_reads:
-    in:
-      orig_fastq_dirs:
-        source: fastq_dir
-      adj_fastq_dir:
-        source: fastq_dir
-      assay:
-        source: assay
-      threads:
-        source: threads
-    out: [trimmed_fastq_dir]
-    run: salmon-quantification/trim-reads.cwl
-  salmon:
-    in:
-      orig_fastq_dirs:
-        source: fastq_dir
-      trimmed_fastq_dir:
-        source: trim_reads/trimmed_fastq_dir
-      assay:
-        source: assay
-      threads:
-        source: threads
-      expected_cell_count:
-        source: expected_cell_count
-      keep_all_barcodes:
-        source: keep_all_barcodes
-      visium_probe_set_version:
-        source: visium_probe_set_version
-    out:
-      - output_dir
-    run: salmon-quantification/salmon.cwl
-    label: "Salmon Alevin, with index from GRCh38 transcriptome"
-  alevin_to_anndata:
-    in:
-      assay:
-        source: assay
-      alevin_dir:
-        source: salmon/output_dir
-    out:
-      - expr_h5ad
-      - raw_expr_h5ad
-      - genome_build_json
-    run: salmon-quantification/alevin-to-anndata.cwl
-    label: "Convert Alevin output to AnnData object in h5ad format"
-  annotate_cells:
-    in:
-      orig_fastq_dirs:
-        source: fastq_dir
-      assay:
-        source: assay
-      h5ad_file:
-        source: alevin_to_anndata/expr_h5ad
-    out:
-      - annotated_h5ad_file
-    run: salmon-quantification/annotate-cells.cwl
+outputs:
+  h5ad_file:
+    type: File?
+    outputBinding:
+      glob: 'expr.h5ad'
+  bam_file:
+    type: File?
+    outputBinding:
+      glob: 'sorted.bam'
+  bam_file_index:
+    type: File?
+    outputBinding:
+      glob: 'sorted.bam.bai'
+  tsv_gz_file:
+    type: File?
+    outputBinding:
+      glob: 'counts.tsv.gz'
