@@ -19,6 +19,8 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from scipy.spatial import distance
 
+TISSUE_COVERAGE_CUTOFF = 0.7
+
 def segment_tissue(img, crop_img, blur_size, morph_kernel_size=153):
     '''
     :param img: RGB Image of the tissue with fiducial spots around it (numpy array 3D)
@@ -96,14 +98,19 @@ def detect_fiducial_spots(img, distance):
     if circles is not None:
         circles = np.round(circles[0, :]).astype("int")
 
+        diameters = []
         for (x, y, r) in circles:
             # Draw the circle
             cv2.circle(blank_img, (x, y), r, (255, 0, 0), 2)
+            diameters.append(r*2)
+
+        average_diameter = np.average(diameters)
+
     else:
         print('No Fiducial Spots Found... Exiting')
         sys.exit()
 
-    return circles
+    return circles, average_diameter
 
     # contour method not as great ##########
     # thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
@@ -268,7 +275,7 @@ def get_gpr_df(dataset_dir, threshold, crop_dim=(650, 800), blur_size=255, morph
 
     print('Starting fiducial spot detection from image...')
     # find fiducial beads in the tissue
-    fiducial_spots = detect_fiducial_spots(img, crop_dim)
+    fiducial_spots, fiducial_pixel_diameter = detect_fiducial_spots(img, crop_dim)
     print('Finish fiducial spot detection.')
 
     print('Finding best reference frame and slide...')
@@ -278,18 +285,23 @@ def get_gpr_df(dataset_dir, threshold, crop_dim=(650, 800), blur_size=255, morph
     match_slide = tiles[match_slide_idx].copy()
     match_frame = frames[match_slide_idx].copy()
 
+    fiducial_spatial_diameter = match_frame['Dia.'].iloc[0]
+    scale_factor = fiducial_pixel_diameter / fiducial_spatial_diameter
+
+    spot_spatial_diameter = match_slide['Dia'].iloc[0]
+
     # align and register tissue with fiducial spots
     fractions = align_N_register(tissue, match_slide, match_frame, scaler_fs_detected)
 
     # write out a subset of the dataframe for selected capture spots
     # match_slide['Fraction of Tissue Coverage'] = fractions
     match_slide.loc[:, 'Tissue Coverage Fraction'] = fractions
-    return match_slide
+    return match_slide, scale_factor, spot_spatial_diameter
 
-def read_visium_pos(dataset_dir: Path, cutoff=0.0) -> pd.DataFrame:
+def read_visium_pos(dataset_dir: Path, cutoff=0.0):
     threshold = 0
     gpr_file = list(find_files(dataset_dir, "*.gpr"))[0]
-    gpr_df = get_gpr_df(dataset_dir, threshold)
+    gpr_df, scale_factor, spot_spatial_diameter = get_gpr_df(dataset_dir, threshold)
     gpr_df = gpr_df.set_index(['Column', 'Row'], inplace=False, drop=True)
     plate_version_number = gpr_file.stem[1]
     barcode_coords_file = Path(f"/opt/visium-v{plate_version_number}_coordinates.txt")
@@ -298,10 +310,11 @@ def read_visium_pos(dataset_dir: Path, cutoff=0.0) -> pd.DataFrame:
     coords_df['Row'] = coords_df['Row'] // 2
     coords_df = coords_df.set_index(['Column', 'Row'])
     gpr_df['barcode'] = coords_df['barcode']
+    barcodes = gpr_df.barcode[gpr_df["Tissue Coverage Fraction"] >= TISSUE_COVERAGE_CUTOFF]
     gpr_df = gpr_df[['barcode', 'X', 'Y']]
     gpr_df = gpr_df.reset_index(inplace=False)
     gpr_df = gpr_df.set_index('barcode', inplace=False, drop=True)
-    return gpr_df
+    return gpr_df, barcodes, scale_factor, spot_spatial_diameter
 
 def find_files(directory: Path, pattern: str) -> Iterable[Path]:
     for dirpath_str, dirnames, filenames in walk(directory):
@@ -314,7 +327,15 @@ def find_files(directory: Path, pattern: str) -> Iterable[Path]:
 def annotate(h5ad_path: Path, dataset_dir: Path, assay: Assay) -> anndata.AnnData:
 
     d = anndata.read_h5ad(h5ad_path)
-    barcode_pos = read_visium_pos(dataset_dir)
+    barcode_pos, barcodes, scale_factor, spot_spatial_diameter = read_visium_pos(dataset_dir)
+
+    d = d[d.obs.index.isin(barcodes)]
+
+    gpr_file = list(find_files(dataset_dir, "*.gpr"))[0]
+    spatial_key = "spatial"
+    library_id = gpr_file.stem
+    d.uns[spatial_key] = {library_id: {}}
+    d.uns[spatial_key][library_id]["scalefactors"] = {"tissue_hires_scalef": scale_factor, "spot_diameter_fullres": spot_spatial_diameter}
 
     quant_bc_set = set(d.obs.index)
     pos_bc_set = set(barcode_pos.index)
@@ -332,6 +353,8 @@ def annotate(h5ad_path: Path, dataset_dir: Path, assay: Assay) -> anndata.AnnDat
     quant_pos_ordered = quant_pos.loc[d.obs.index, :]
     quant_pos_ordered = quant_pos_ordered[['X','Y']]
     d.obsm["X_spatial"] = quant_pos_ordered.to_numpy()
+
+
 
     return d
 
