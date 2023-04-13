@@ -288,7 +288,7 @@ def get_gpr_df(dataset_dir, threshold, crop_dim=(650, 800), blur_size=255, morph
     fiducial_spatial_diameter = match_frame['Dia.'].iloc[0]
     scale_factor = fiducial_pixel_diameter / fiducial_spatial_diameter
 
-    spot_spatial_diameter = match_slide['Dia'].iloc[0]
+    spot_spatial_diameter = match_slide['Dia.'].iloc[0]
 
     # align and register tissue with fiducial spots
     fractions = align_N_register(tissue, match_slide, match_frame, scaler_fs_detected)
