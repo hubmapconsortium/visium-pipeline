@@ -3,7 +3,7 @@ class: CommandLineTool
 label: Dimensionality reduction and clustering
 requirements:
   DockerRequirement:
-    dockerPull: hubmap/visium-analysis:latest
+    dockerPull: hubmap/squidpy-analysis:latest
 baseCommand: /opt/squidpy_entry_point.py
 
 inputs:
@@ -20,7 +20,7 @@ inputs:
     inputBinding:
       position: 2
 outputs:
-  filtered_data_h5ad:
+  squidpy_annotated_h5ad:
     type: File
     outputBinding:
       glob: squidpy_annotated.h5ad

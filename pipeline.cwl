@@ -74,6 +74,28 @@ outputs:
     label: "Cluster marker genes, logreg method"
   ome_tiff_file
     outputSource: ome_tiff/ome_tiff_file
+    type: File
+  squidpy_annotated_h5ad
+    outputSource: squidpy_analysis/squidpy_annotated_h5ad
+    type: File
+  neighborhood_enrichment_plot
+    outputSource: squidpy_analysis/neighborhood_enrichment_plot
+    type: File
+  co_occurrence_plot
+    outputSource: squidpy_analysis/co_occurrence_plot
+    type: File
+  interaction_matrix_plot
+    outputSource: squidpy_analysis/interaction_matrix_plot
+    type: File
+  centrality_scores_plot
+    outputSource: squidpy_analysis/centrality_scores_plot
+    type: File
+  ripley_plot
+    outputSource: squidpy_analysis/ripley_plot
+    type: File
+  squidpy_spatial_plot:
+    outputSource: squidpy_analysis/spatial_plot
+    type: File?
 steps:
   adjust_barcodes:
     in:
@@ -131,27 +153,32 @@ steps:
       - spatial_plot
     run: steps/scanpy-analysis.cwl
     label: "Secondary analysis via ScanPy"
-  scvelo_analysis:
+  squidpy_analysis:
     in:
-      spliced_h5ad_file:
-        source: salmon_quantification/count_matrix_h5ad
-      assay_name:
+      assay:
         source: assay
+      h5ad_file:
+        source: salmon_quantification/count_matrix_h5ad
+      orig_fastq_dir:
+        source: fastq_dir
     out:
-      - annotated_h5ad_file
-      - embedding_grid_plot
-    run: steps/scvelo-analysis.cwl
-    label: "RNA velocity analysis via scVelo"
+      - squidpy_annotated_h5ad
+      - neighborhood_enrichment_plot
+      - co_occurrence
+      - interaction_matrix
+      - ripley
+      - centrality_score
+      - spatial_plot
+    run: steps/squidpy-analysis.cwl
+    label: "Spatial analysis via SquidPy"
   compute_qc_results:
     in:
       assay:
         source: assay
       h5ad_primary:
-        source: salmon_quantification/count_matrix_h5ad
+        source: quantification/count_matrix_h5ad
       h5ad_secondary:
         source: scanpy_analysis/filtered_data_h5ad
-      salmon_dir:
-        source: salmon_quantification/salmon_output
     out:
       - scanpy_qc_results
       - qc_metrics
