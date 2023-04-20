@@ -1,6 +1,7 @@
 anndata~=0.8.0
 biopython~=1.79
 h5py~=3.6.0
+htseq
 leidenalg~=0.8.9
 manhole~=1.8
 matplotlib~=3.5.1

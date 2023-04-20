@@ -16,7 +16,7 @@ inputs:
     inputBinding:
       position: 1
   orig_fastq_dir:
-    type: Directory
+    type: Directory[]
     inputBinding:
       position: 2
 outputs:

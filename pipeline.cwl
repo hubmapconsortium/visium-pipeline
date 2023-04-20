@@ -25,9 +25,9 @@ inputs:
     type: int?
 outputs:
   count_matrix_h5ad:
-    outputSource: salmon_quantification/count_matrix_h5ad
+    outputSource: quantification/h5ad_file
     type: File
-    label: "Unfiltered count matrix from Alevin, converted to H5AD, spliced and unspliced counts"
+    label: "Unfiltered count matrix from BWA and umi_tools, converted to H5AD, spliced and unspliced counts"
   fastqc_dir:
     outputSource: fastqc/fastqc_dir
     type: Directory[]
@@ -72,25 +72,25 @@ outputs:
     outputSource: scanpy_analysis/marker_gene_plot_logreg
     type: File
     label: "Cluster marker genes, logreg method"
-  ome_tiff_file
-    outputSource: ome_tiff/ome_tiff_file
-    type: File
-  squidpy_annotated_h5ad
+#  ome_tiff_file:
+#    outputSource: ome_tiff/ome_tiff_file
+#    type: File
+  squidpy_annotated_h5ad:
     outputSource: squidpy_analysis/squidpy_annotated_h5ad
     type: File
-  neighborhood_enrichment_plot
+  neighborhood_enrichment_plot:
     outputSource: squidpy_analysis/neighborhood_enrichment_plot
     type: File
-  co_occurrence_plot
+  co_occurrence_plot:
     outputSource: squidpy_analysis/co_occurrence_plot
     type: File
-  interaction_matrix_plot
+  interaction_matrix_plot:
     outputSource: squidpy_analysis/interaction_matrix_plot
     type: File
-  centrality_scores_plot
+  centrality_scores_plot:
     outputSource: squidpy_analysis/centrality_scores_plot
     type: File
-  ripley_plot
+  ripley_plot:
     outputSource: squidpy_analysis/ripley_plot
     type: File
   squidpy_spatial_plot:
@@ -107,8 +107,10 @@ steps:
     run: steps/adjust-barcodes.cwl
   quantification:
     in:
-      fastq_dir:
+      adj_fastq_dir:
         source: adjust_barcodes/adj_fastq_dir
+      orig_fastq_dirs:
+        source: fastq_dir
       assay:
         source: assay
       threads:
@@ -120,11 +122,9 @@ steps:
       visium_probe_set_version:
         source: visium_probe_set_version
     out:
-      - salmon_output
-      - count_matrix_h5ad
-      - raw_count_matrix
-      - genome_build_json
-    run: steps/salmon-quantification.cwl
+      - h5ad_file
+      - bam_file
+    run: steps/quantification.cwl
   fastqc:
     scatter: [fastq_dir]
     scatterMethod: dotproduct
@@ -142,7 +142,9 @@ steps:
       assay:
         source: assay
       h5ad_file:
-        source: salmon_quantification/count_matrix_h5ad
+        source: quantification/h5ad_file
+      orig_fastq_dir:
+        source: fastq_dir
     out:
       - filtered_data_h5ad
       - umap_plot
@@ -158,16 +160,16 @@ steps:
       assay:
         source: assay
       h5ad_file:
-        source: salmon_quantification/count_matrix_h5ad
+        source: quantification/h5ad_file
       orig_fastq_dir:
         source: fastq_dir
     out:
       - squidpy_annotated_h5ad
       - neighborhood_enrichment_plot
-      - co_occurrence
-      - interaction_matrix
-      - ripley
-      - centrality_score
+      - co_occurrence_plot
+      - interaction_matrix_plot
+      - ripley_plot
+      - centrality_scores_plot
       - spatial_plot
     run: steps/squidpy-analysis.cwl
     label: "Spatial analysis via SquidPy"
@@ -176,19 +178,21 @@ steps:
       assay:
         source: assay
       h5ad_primary:
-        source: quantification/count_matrix_h5ad
+        source: quantification/h5ad_file
       h5ad_secondary:
         source: scanpy_analysis/filtered_data_h5ad
+      bam_file:
+        source: quantification/bam_file
     out:
       - scanpy_qc_results
       - qc_metrics
     run: steps/compute-qc-metrics.cwl
     label: "Compute QC metrics"
-  ome_tiff:
-    in:
-      data_dir:
-        source: fastq_dir
-    out:
-      - ome_tiff_file
-    run steps/ome-tiff-convert.cwl
-    label: "Convert tiff image to ome tiff"
+#  ome_tiff:
+#    in:
+#      data_dir:
+#        source: fastq_dir
+#    out:
+#      - ome_tiff_file
+#    run: steps/ome-tiff-convert.cwl
+#    label: "Convert tiff image to ome tiff"

@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 import pandas as pd
-from os import walk
+from os import walk, fspath
 import anndata
 import manhole
 import matplotlib.pyplot as plt
@@ -37,8 +37,8 @@ def main(assay: Assay, h5ad_file: Path, orig_fastq_dir: Path):
     adata = anndata.read(h5ad_file)
     adata.obsm["spatial"] = adata.obsm["X_spatial"]
 
-    tiff_file = find_ome_tiffs(input_dir=orig_fastq_dir)
-    img = cv2.imread(tiff_file[0])
+    tiff_file = list(find_ome_tiffs(input_dir=orig_fastq_dir))[0]
+    img = cv2.imread(fspath(tiff_file))
 
     sq.gr.spatial_neighbors(adata)
     sq.gr.nhood_enrichment(adata, cluster_key="leiden")

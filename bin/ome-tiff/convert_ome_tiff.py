@@ -8,16 +8,9 @@ from os import walk
 from pathlib import Path
 from subprocess import run
 from typing import Iterable, Tuple
+from aicsimageio import AICSImage
 
 ome_tiff_pattern = re.compile(r"(?P<basename>.*)\.tif(f?)$")
-
-bfconvert_command_template = [
-    "/opt/bftools/bfconvert",
-    "-bigtiff",
-    "{source}",
-    "{dest}",
-]
-
 
 def find_ome_tiffs(input_dir: Path) -> Iterable[Tuple[Path, Path]]:
     """
@@ -35,9 +28,8 @@ def find_ome_tiffs(input_dir: Path) -> Iterable[Tuple[Path, Path]]:
 
 
 def fix_ome_tiff(source: Path, dest: Path):
-    command = [piece.format(source=source, dest=dest) for piece in bfconvert_command_template]
-    print("Running", shlex.join(command))
-    run(command)
+    img = AICSImage(source)
+    img.write(dest)
 
 
 def main(input_dir: Path, output_path_prefix):

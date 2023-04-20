@@ -194,7 +194,8 @@ def main(
         barcode_file = f'/opt/visium-v{visium_plate_version}.txt'
         r1_fastq_file, r2_fastq_file = fastq_pairs[0]
         BWA_INDEX_COMMAND = f"bwa index {index}"
-        UMI_EXTRACT_COMMAND = f"umi_tools extract --extract-method=string --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNNNN --stdin {r1_fastq_file} --stdout extracted_barcode_umi.fastq.gz --read2-in={r2_fastq_file} --read2-out=extracted_transcript.tar.gz"        check_call(UMI_EXTRACT_COMMAND, shell=True)
+        UMI_EXTRACT_COMMAND = f"umi_tools extract --extract-method=string --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNNNN --stdin {r1_fastq_file} --stdout extracted_barcode_umi.fastq.gz --read2-in={r2_fastq_file} --read2-out=extracted_transcript.tar.gz"
+        check_call(UMI_EXTRACT_COMMAND, shell=True)
 
         check_call(BWA_INDEX_COMMAND)
         BWA_COMMAND = f"bwa mem -M -t {threads} {index} {r1_fastq_file} {r2_fastq_file} > out.sam"
