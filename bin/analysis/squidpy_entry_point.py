@@ -33,11 +33,11 @@ def find_ome_tiffs(input_dir: Path) -> Iterable[Path]:
                 src_filepath = dirpath / filename
                 yield src_filepath
 
-def main(assay: Assay, h5ad_file: Path, orig_fastq_dir: Path):
+def main(assay: Assay, h5ad_file: Path, img_dir: Path):
     adata = anndata.read(h5ad_file)
     adata.obsm["spatial"] = adata.obsm["X_spatial"]
 
-    tiff_file = list(find_ome_tiffs(input_dir=orig_fastq_dir))[0]
+    tiff_file = list(find_ome_tiffs(input_dir=img_dir))[0]
     img = cv2.imread(fspath(tiff_file))
 
     sq.gr.spatial_neighbors(adata)
@@ -83,8 +83,8 @@ if __name__ == "__main__":
     p = ArgumentParser()
     p.add_argument("assay", choices=list(Assay), type=Assay)
     p.add_argument("alevin_h5ad_file", type=Path)
-    p.add_argument("orig_fastq_dir", type=Path)
+    p.add_argument("img_dir", type=Path)
 
     args = p.parse_args()
 
-    main(args.assay, args.alevin_h5ad_file, args.orig_fastq_dir)
+    main(args.assay, args.alevin_h5ad_file, args.img_dir)

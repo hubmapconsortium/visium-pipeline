@@ -163,8 +163,8 @@ def find_adj_fastq_files(directory: Path) -> Iterable[Tuple[Path, Path]]:
 
 def main(
     assay: Assay,
-    orig_fastq_dirs: Sequence[Path],
     trimmed_fastq_dir: Path,
+    metadata_dir: Path,
     expected_cell_count: Optional[int],
     keep_all_barcodes: bool,
     threads: Optional[int],
@@ -172,8 +172,8 @@ def main(
 ):
     threads = threads or 1
 
-    visium_plate_version = get_visium_plate_version(orig_fastq_dirs[0])
-    visium_probe_set_version = get_visium_probe_set_version(orig_fastq_dirs[0], visium_probe_set_version)
+    visium_plate_version = get_visium_plate_version(metadata_dir)
+    visium_probe_set_version = get_visium_probe_set_version(metadata_dir, visium_probe_set_version)
 
     index = f"/opt/v{visium_probe_set_version}.fasta"
 
@@ -181,14 +181,6 @@ def main(
 
     if not fastq_pairs:
         raise ValueError("No FASTQ files found")
-
-    # hack
-    if assay in {Assay.VISIUM_FF, Assay.VISIUM_FFPE}:
-        # Don't support multiple input directories for Slide-seq; this will
-        # likely cause significantly incorrect results due to barcode overlap
-        # between multiple input data sets
-        if len(orig_fastq_dirs) != 1:
-            raise ValueError("Need exactly 1 input directory for Visium")
 
     if assay in {Assay.VISIUM_FFPE, Assay.VISIUM_FF}:
         barcode_file = f'/opt/visium-v{visium_plate_version}.txt'
@@ -223,7 +215,7 @@ if __name__ == "__main__":
     p = ArgumentParser()
     p.add_argument("assay", choices=list(Assay), type=Assay)
     p.add_argument("trimmed_fastq_dir", type=Path)
-    p.add_argument("orig_fastq_dir", type=Path, nargs="+")
+    p.add_argument("metadata_dir", type=Path)
     p.add_argument("--expected-cell-count", type=int)
     p.add_argument("--keep-all-barcodes", action="store_true")
     p.add_argument("-p", "--threads", type=int)
@@ -234,6 +226,7 @@ if __name__ == "__main__":
         args.assay,
         args.orig_fastq_dir,
         args.trimmed_fastq_dir,
+        args.metadata_dir,
         args.expected_cell_count,
         args.keep_all_barcodes,
         args.threads,

@@ -9,7 +9,13 @@ requirements:
 inputs:
   fastq_dir:
     label: "Directory containing FASTQ files"
-    type: Directory[]
+    type: Directory
+  img_dir:
+    label: "Directory containing TIFF files"
+    type: Directory
+  metadata_dir:
+    label: "Directory containing gpr file and metadata.tsv"
+    type: Directory
   assay:
     label: "scRNA-seq assay"
     type: string
@@ -109,7 +115,7 @@ steps:
     in:
       adj_fastq_dir:
         source: adjust_barcodes/adj_fastq_dir
-      orig_fastq_dirs:
+      metadata_dir:
         source: fastq_dir
       assay:
         source: assay
@@ -143,8 +149,10 @@ steps:
         source: assay
       h5ad_file:
         source: quantification/h5ad_file
-      orig_fastq_dir:
+      metadata_dir:
         source: fastq_dir
+      img_dir:
+        source: img_dir
     out:
       - filtered_data_h5ad
       - umap_plot
@@ -161,8 +169,8 @@ steps:
         source: assay
       h5ad_file:
         source: quantification/h5ad_file
-      orig_fastq_dir:
-        source: fastq_dir
+      img_dir:
+        source: img_dir
     out:
       - squidpy_annotated_h5ad
       - neighborhood_enrichment_plot
@@ -188,11 +196,11 @@ steps:
       - qc_metrics
     run: steps/compute-qc-metrics.cwl
     label: "Compute QC metrics"
-#  ome_tiff:
-#    in:
-#      data_dir:
-#        source: fastq_dir
-#    out:
-#      - ome_tiff_file
-#    run: steps/ome-tiff-convert.cwl
-#    label: "Convert tiff image to ome tiff"
+  ome_tiff:
+    in:
+      img_dir:
+        source: img_dir
+    out:
+      - ome_tiff_file
+    run: steps/ome-tiff-convert.cwl
+    label: "Convert tiff image to ome tiff"

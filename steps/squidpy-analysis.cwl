@@ -15,8 +15,8 @@ inputs:
     type: File
     inputBinding:
       position: 1
-  orig_fastq_dir:
-    type: Directory[]
+  img_dir:
+    type: Directory
     inputBinding:
       position: 2
 outputs:

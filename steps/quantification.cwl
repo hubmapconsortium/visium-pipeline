@@ -19,8 +19,8 @@ inputs:
     type: Directory
     inputBinding:
       position: 1
-  orig_fastq_dirs:
-    type: Directory[]
+  metadata_dir:
+    type: Directory
     inputBinding:
       position: 2
   threads:

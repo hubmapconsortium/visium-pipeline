@@ -12,7 +12,7 @@ inputs:
     inputBinding:
       position: 0
   fastq_dir:
-    type: Directory[]
+    type: Directory
     inputBinding:
       position: 1
 outputs:

@@ -15,10 +15,14 @@ inputs:
     type: File
     inputBinding:
       position: 1
-  orig_fastq_dir:
-    type: Directory[]
+  metadata_dir:
+    type: Directory
     inputBinding:
       position: 2
+  img_dir:
+    type: Directory
+    inputBinding:
+      position: 3
 outputs:
   filtered_data_h5ad:
     type: File

@@ -17,8 +17,6 @@ UMI_SEGMENT = slice(16, 28)
 
 BARCODE_QUAL_DUMMY = "F" * BARCODE_LENGTH * len(BARCODE_STARTS)
 
-DATA_DIR = Path(__file__).parent / "data/snareseq"
-
 
 class KeyDefaultDict(dict):
     def __missing__(self, key):
@@ -38,8 +36,7 @@ def main(
     output_dir: Path = Path(),
     barcode_filename: Path = Path(),
 ):
-    barcode_filename = f"visium-v{visium_version_number}.txt"
-    BARCODE_ALLOWLIST_FILE = DATA_DIR / Path(barcode_filename)
+    barcode_filename = f"/opt/visium-v{visium_version_number}.txt"
 
     barcode_allowlist = read_barcode_allowlist(barcode_filename)
     correcter = bu.BarcodeCorrecter(barcode_allowlist, edit_distance=1)
@@ -92,5 +89,4 @@ if __name__ == "__main__":
     main(
         fastq_dirs=args.fastq_dirs,
         barcode_filename=args.barcode_list_file,
-        n6_dt_mapping_file=args.n6_dt_mapping_file,
     )

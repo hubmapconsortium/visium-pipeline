@@ -246,9 +246,9 @@ def align_N_register(tissue, slide, frame, scaler_fs_detected):
     return fractions
 
 
-def get_gpr_df(dataset_dir, threshold, crop_dim=(650, 800), blur_size=255, morph_kernel_size=153):
-    gpr_path = list(find_files(dataset_dir, "*.gpr"))[0]
-    img_path = list(find_files(dataset_dir, "*.tiff"))[0]
+def get_gpr_df(metadata_dir, img_dir, threshold, crop_dim=(650, 800), blur_size=255, morph_kernel_size=153):
+    gpr_path = list(find_files(metadata_dir, "*.gpr"))[0]
+    img_path = list(find_files(img_dir, "*.tiff"))[0]
 
 
     gpr = pd.read_table(gpr_path, skiprows=9)
@@ -298,10 +298,10 @@ def get_gpr_df(dataset_dir, threshold, crop_dim=(650, 800), blur_size=255, morph
     match_slide.loc[:, 'Tissue Coverage Fraction'] = fractions
     return match_slide, scale_factor, spot_spatial_diameter
 
-def read_visium_pos(dataset_dir: Path, cutoff=0.0):
+def read_visium_pos(metadata_dir: Path, img_dir: Path, cutoff=0.0):
     threshold = 0
-    gpr_file = list(find_files(dataset_dir, "*.gpr"))[0]
-    gpr_df, scale_factor, spot_spatial_diameter = get_gpr_df(dataset_dir, threshold)
+    gpr_file = list(find_files(metadata_dir, "*.gpr"))[0]
+    gpr_df, scale_factor, spot_spatial_diameter = get_gpr_df(metadata_dir, img_dir, threshold)
     gpr_df = gpr_df.set_index(['Column', 'Row'], inplace=False, drop=True)
     plate_version_number = gpr_file.stem[1]
     barcode_coords_file = Path(f"/opt/visium-v{plate_version_number}_coordinates.txt")
@@ -324,14 +324,14 @@ def find_files(directory: Path, pattern: str) -> Iterable[Path]:
             if filepath.match(pattern):
                 yield filepath
 
-def annotate(h5ad_path: Path, dataset_dir: Path, assay: Assay) -> anndata.AnnData:
+def annotate(h5ad_path: Path, metadata_dir: Path, img_dir: Path, assay: Assay) -> anndata.AnnData:
 
     d = anndata.read_h5ad(h5ad_path)
-    barcode_pos, barcodes, scale_factor, spot_spatial_diameter = read_visium_pos(dataset_dir)
+    barcode_pos, barcodes, scale_factor, spot_spatial_diameter = read_visium_pos(metadata_dir, img_dir)
 
     d = d[d.obs.index.isin(barcodes)]
 
-    gpr_file = list(find_files(dataset_dir, "*.gpr"))[0]
+    gpr_file = list(find_files(metadata_dir, "*.gpr"))[0]
     spatial_key = "spatial"
     library_id = gpr_file.stem
     d.uns[spatial_key] = {library_id: {}}
@@ -358,8 +358,8 @@ def annotate(h5ad_path: Path, dataset_dir: Path, assay: Assay) -> anndata.AnnDat
 
     return d
 
-def main(assay: Assay, h5ad_file: Path, orig_fastq_dir: Path):
-    adata = annotate(h5ad_file, orig_fastq_dir, assay)
+def main(assay: Assay, h5ad_file: Path, metadata_dir: Path, img_dir: Path):
+    adata = annotate(h5ad_file, metadata_dir, img_dir, assay)
     if assay.secondary_analysis_layer in adata.layers:
         adata.X = adata.layers[assay.secondary_analysis_layer]
     adata.var_names_make_unique()
@@ -423,9 +423,11 @@ if __name__ == "__main__":
 
     p = ArgumentParser()
     p.add_argument("assay", choices=list(Assay), type=Assay)
-    p.add_argument("alevin_h5ad_file", type=Path)
-    p.add_argument("orig_fastq_dir", type=Path)
+    p.add_argument("h5ad_file", type=Path)
+    p.add_argument("metadata_dir", type=Path)
+    p.add_argument("img_dir", type=Path)
+
 
     args = p.parse_args()
 
-    main(args.assay, args.alevin_h5ad_file, args.orig_fastq_dir)
+    main(args.assay, args.h5ad_file, args.metadata_dir, args.img_dir)

@@ -9,9 +9,9 @@ requirements:
 baseCommand: /opt/convert_ome_tiff.py
 
 inputs:
-  data_dir:
+  img_dir:
     label: "Directory containing tiff file"
-    type: Directory[]
+    type: Directory
     inputBinding:
       position: 1
 outputs:
