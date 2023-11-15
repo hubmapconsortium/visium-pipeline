@@ -16,6 +16,9 @@ inputs:
   metadata_dir:
     label: "Directory containing gpr file and metadata.tsv"
     type: Directory
+  spaceranger_dir:
+    label: "Directory containing spaceranger outputs"
+    type: Directory
   assay:
     label: "scRNA-seq assay"
     type: string
@@ -78,27 +81,27 @@ outputs:
     outputSource: scanpy_analysis/marker_gene_plot_logreg
     type: File
     label: "Cluster marker genes, logreg method"
-#  ome_tiff_file:
-#    outputSource: ome_tiff/ome_tiff_file
-#    type: File
+  ome_tiff_file:
+    outputSource: ome_tiff/ome_tiff_file
+    type: File?
   squidpy_annotated_h5ad:
     outputSource: squidpy_analysis/squidpy_annotated_h5ad
-    type: File
+    type: File?
   neighborhood_enrichment_plot:
     outputSource: squidpy_analysis/neighborhood_enrichment_plot
-    type: File
+    type: File?
   co_occurrence_plot:
     outputSource: squidpy_analysis/co_occurrence_plot
-    type: File
+    type: File?
   interaction_matrix_plot:
     outputSource: squidpy_analysis/interaction_matrix_plot
-    type: File
+    type: File?
   centrality_scores_plot:
     outputSource: squidpy_analysis/centrality_scores_plot
-    type: File
+    type: File?
   ripley_plot:
     outputSource: squidpy_analysis/ripley_plot
-    type: File
+    type: File?
   squidpy_spatial_plot:
     outputSource: squidpy_analysis/spatial_plot
     type: File?
@@ -131,6 +134,23 @@ steps:
       - h5ad_file
       - bam_file
     run: steps/quantification.cwl
+  annotate_cells:
+    in:
+      orig_fastq_dirs:
+        source: fastq_dir
+      assay:
+        source: assay
+      h5ad_file:
+        source: quantification/h5ad_file
+      img_dir:
+        source: img_dir
+      metadata_dir:
+        source: metadata_dir
+      metadata_json:
+        source: adjust_barcodes/metadata_json
+    out:
+      - annotated_h5ad_file
+    run: steps/annotate-cells.cwl
   fastqc:
     scatter: [fastq_dir]
     scatterMethod: dotproduct
@@ -181,6 +201,17 @@ steps:
       - spatial_plot
     run: steps/squidpy-analysis.cwl
     label: "Spatial analysis via SquidPy"
+  spaceranger_conversion:
+    in:
+      assay:
+        source: assay
+      spaceranger_dir:
+        source: spaceranger_dir
+    out:
+      - raw_spaceranger_h5ad
+      - filtered_spaceranger_h5ad
+    run: steps/spaceranger-conversion.cwl
+    label: "Spatial analysis via SquidPy"
   compute_qc_results:
     in:
       assay:
@@ -196,11 +227,4 @@ steps:
       - qc_metrics
     run: steps/compute-qc-metrics.cwl
     label: "Compute QC metrics"
-  ome_tiff:
-    in:
-      img_dir:
-        source: img_dir
-    out:
-      - ome_tiff_file
-    run: steps/ome-tiff-convert.cwl
-    label: "Convert tiff image to ome tiff"
+

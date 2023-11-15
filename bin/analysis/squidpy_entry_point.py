@@ -18,7 +18,7 @@ import re
 import cv2
 import numpy as np
 
-ome_tiff_pattern = re.compile(r"(?P<basename>.*)\.tif(f?)$")
+ome_tiff_pattern = re.compile(r"(?P<basename>.*)\.ome\.tiff(f?)$")
 
 def find_ome_tiffs(input_dir: Path) -> Iterable[Path]:
     """
@@ -33,15 +33,25 @@ def find_ome_tiffs(input_dir: Path) -> Iterable[Path]:
                 src_filepath = dirpath / filename
                 yield src_filepath
 
-def main(assay: Assay, h5ad_file: Path, img_dir: Path):
+def main(assay: Assay, h5ad_file: Path, img_dir: Path = None):
     adata = anndata.read(h5ad_file)
     adata.obsm["spatial"] = adata.obsm["X_spatial"]
-
-    tiff_file = list(find_ome_tiffs(input_dir=img_dir))[0]
-    img = cv2.imread(fspath(tiff_file))
+    if img_dir:
+        tiff_file = list(find_ome_tiffs(input_dir=img_dir))[0]
+        img = cv2.imread(fspath(tiff_file))
+        library_id = list(adata.uns["spatial"].keys())[0]
+        adata.uns["spatial"][library_id]["images"] = {"hires": img}
+        adata.uns["spatial"][library_id]["scalefactors"] = {
+            "tissue_hires_scalef": 1.0,
+            "spot_diameter_fullres": 89,
+        }
 
     sq.gr.spatial_neighbors(adata)
     sq.gr.nhood_enrichment(adata, cluster_key="leiden")
+
+    with new_plot():
+        sq.pl.spatial_scatter(adata, color="leiden")
+        plt.savefig("spatial_scatter.pdf", bbox_inches="tight")
 
     with new_plot():
         sq.pl.nhood_enrichment(adata, cluster_key="leiden")
@@ -65,11 +75,11 @@ def main(assay: Assay, h5ad_file: Path, img_dir: Path):
         sq.pl.interaction_matrix(adata, cluster_key="leiden")
         plt.savefig("interaction_matrix.pdf", bbox_inches="tight")
 
-    sq.gr.ripley(adata, cluster_key="leiden")
+#        sq.gr.ripley(adata, cluster_key="leiden")
 
-    with new_plot():
-        sq.pl.ripley(adata, cluster_key="leiden")
-        plt.savefig("ripley.pdf", bbox_inches="tight")
+#        with new_plot():
+#            sq.pl.ripley(adata, cluster_key="leiden")
+#            plt.savefig("ripley.pdf", bbox_inches="tight")
 
     output_file = Path("squidpy_annotated.h5ad")
     print("Saving output to", output_file.absolute())
@@ -83,7 +93,7 @@ if __name__ == "__main__":
     p = ArgumentParser()
     p.add_argument("assay", choices=list(Assay), type=Assay)
     p.add_argument("alevin_h5ad_file", type=Path)
-    p.add_argument("img_dir", type=Path)
+    p.add_argument("img_dir", type=Path, nargs='?')
 
     args = p.parse_args()
 
