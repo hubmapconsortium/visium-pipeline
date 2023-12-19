@@ -3,7 +3,7 @@ class: CommandLineTool
 label: Assay-specific annotation of cell barcodes after quantification
 requirements:
   DockerRequirement:
-    dockerPull: hubmap/visium-analysis:latest
+    dockerPull: hubmap/visium-analysis:1.0.1
 baseCommand: /opt/annotate_cells.py
 
 inputs:

@@ -3,7 +3,7 @@ class: CommandLineTool
 label: Runs fastQC on each fastq file in fastq directory
 requirements:
   DockerRequirement:
-    dockerPull: hubmap/visium-analysis:latest
+    dockerPull: hubmap/visium-analysis:1.0.1
 baseCommand: /opt/fastqc_wrapper.py
 
 inputs:
