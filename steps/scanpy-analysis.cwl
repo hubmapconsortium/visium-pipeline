@@ -3,7 +3,7 @@ class: CommandLineTool
 label: Dimensionality reduction and clustering
 requirements:
   DockerRequirement:
-    dockerPull: hubmap/visium-analysis:1.0.1
+    dockerPull: hubmap/visium-analysis:latest
 baseCommand: /opt/scanpy_entry_point.py
 
 inputs:
