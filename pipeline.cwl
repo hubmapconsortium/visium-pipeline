@@ -150,7 +150,7 @@ steps:
         source: adjust_barcodes/metadata_json
     out:
       - annotated_h5ad_file
-    run: steps/annotate-cells.cwl
+    run: salmon-rnaseq/steps/salmon-quantification/annotate-cells.cwl
   fastqc:
     scatter: [fastq_dir]
     scatterMethod: dotproduct
@@ -161,7 +161,7 @@ steps:
         source: threads
     out:
       - fastqc_dir
-    run: steps/fastqc.cwl
+    run: salmon-rnaseq/steps/fastqc.cwl
     label: "Run fastqc on all fastq files in fastq directory"
   scanpy_analysis:
     in:
@@ -181,7 +181,7 @@ steps:
       - dispersion_plot
       - umap_density_plot
       - spatial_plot
-    run: steps/scanpy-analysis.cwl
+    run: salmon-rnaseq/steps/scanpy-analysis.cwl
     label: "Secondary analysis via ScanPy"
   squidpy_analysis:
     in:
@@ -199,18 +199,7 @@ steps:
       - ripley_plot
       - centrality_scores_plot
       - spatial_plot
-    run: steps/squidpy-analysis.cwl
-    label: "Spatial analysis via SquidPy"
-  spaceranger_conversion:
-    in:
-      assay:
-        source: assay
-      spaceranger_dir:
-        source: spaceranger_dir
-    out:
-      - raw_spaceranger_h5ad
-      - filtered_spaceranger_h5ad
-    run: steps/spaceranger-conversion.cwl
+    run: salmon-rnaseq/steps/squidpy-analysis.cwl
     label: "Spatial analysis via SquidPy"
   compute_qc_results:
     in:
