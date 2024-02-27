@@ -7,10 +7,6 @@ requirements:
 baseCommand: /opt/adjust_barcodes.py
 
 inputs:
-  assay:
-    type: string
-    inputBinding:
-      position: 0
   fastq_dir:
     type: Directory
     inputBinding:

@@ -110,8 +110,6 @@ steps:
     in:
       fastq_dir:
         source: fastq_dir
-      assay:
-        source: assay
     out: [adj_fastq_dir]
     run: steps/adjust-barcodes.cwl
   quantification:
@@ -120,8 +118,6 @@ steps:
         source: adjust_barcodes/adj_fastq_dir
       metadata_dir:
         source: fastq_dir
-      assay:
-        source: assay
       threads:
         source: threads
       expected_cell_count:
@@ -203,8 +199,6 @@ steps:
     label: "Spatial analysis via SquidPy"
   compute_qc_results:
     in:
-      assay:
-        source: assay
       h5ad_primary:
         source: quantification/h5ad_file
       h5ad_secondary:

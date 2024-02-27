@@ -6,15 +6,11 @@ requirements:
   ResourceRequirement:
     ramMin: 28672
 baseCommand: /opt/quantification.py
-label: Run Salmon Alevin tool on FASTQ input
+label: Run BWA alignment tool on FASTQ input
 
-# arguments are hardcoded in salmon_wrapper.py
+# arguments are hardcoded in quantification.py
 
 inputs:
-  assay:
-    type: string
-    inputBinding:
-      position: 0
   adj_fastq_dir:
     type: Directory
     inputBinding:

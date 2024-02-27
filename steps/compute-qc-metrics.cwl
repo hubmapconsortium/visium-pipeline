@@ -7,10 +7,6 @@ requirements:
 baseCommand: /opt/compute_qc_metrics.py
 
 inputs:
-  assay:
-    type: string
-    inputBinding:
-      position: 0
   h5ad_primary:
     type: File
     inputBinding:
