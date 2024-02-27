@@ -16,12 +16,10 @@ inputs:
   metadata_dir:
     label: "Directory containing gpr file and metadata.tsv"
     type: Directory
-  spaceranger_dir:
-    label: "Directory containing spaceranger outputs"
-    type: Directory
   assay:
     label: "scRNA-seq assay"
     type: string
+    default: "visium-ff"
   threads:
     label: "Number of threads for Salmon"
     type: int
