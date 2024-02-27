@@ -162,7 +162,6 @@ def find_adj_fastq_files(directory: Path) -> Iterable[Tuple[Path, Path]]:
 
 
 def main(
-    assay: Assay,
     trimmed_fastq_dir: Path,
     metadata_dir: Path,
     expected_cell_count: Optional[int],
@@ -182,38 +181,36 @@ def main(
     if not fastq_pairs:
         raise ValueError("No FASTQ files found")
 
-    if assay in {Assay.VISIUM_FFPE, Assay.VISIUM_FF}:
-        barcode_file = f'/opt/visium-v{visium_plate_version}.txt'
-        r1_fastq_file, r2_fastq_file = fastq_pairs[0]
-        BWA_INDEX_COMMAND = f"bwa index {index}"
-        UMI_EXTRACT_COMMAND = f"umi_tools extract --extract-method=string --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNNNN --stdin {r1_fastq_file} --stdout extracted_barcode_umi.fastq.gz --read2-in={r2_fastq_file} --read2-out=extracted_transcript.tar.gz"
-        check_call(UMI_EXTRACT_COMMAND, shell=True)
+    barcode_file = f'/opt/visium-v{visium_plate_version}.txt'
+    r1_fastq_file, r2_fastq_file = fastq_pairs[0]
+    BWA_INDEX_COMMAND = f"bwa index {index}"
+    UMI_EXTRACT_COMMAND = f"umi_tools extract --extract-method=string --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNNNN --stdin {r1_fastq_file} --stdout extracted_barcode_umi.fastq.gz --read2-in={r2_fastq_file} --read2-out=extracted_transcript.tar.gz"
+    check_call(UMI_EXTRACT_COMMAND, shell=True)
 
-        check_call(BWA_INDEX_COMMAND)
-        BWA_COMMAND = f"bwa mem -M -t {threads} {index} {r1_fastq_file} {r2_fastq_file} > out.sam"
-        check_call(BWA_COMMAND)
+    check_call(BWA_INDEX_COMMAND)
+    BWA_COMMAND = f"bwa mem -M -t {threads} {index} {r1_fastq_file} {r2_fastq_file} > out.sam"
+    check_call(BWA_COMMAND)
 
-        with simplesam.Reader(open('out.sam')) as in_sam:
-            with simplesam.Writer(open('mapped.sam', 'w')) as out_sam:
-                for read in in_sam:
-                    if read.mapped:
-                        ensembl_id = str(read).split('\t')[2]
-                        read['XT'] = ensembl_id
-                        out_sam.write(read)
+    with simplesam.Reader(open('out.sam')) as in_sam:
+        with simplesam.Writer(open('mapped.sam', 'w')) as out_sam:
+            for read in in_sam:
+                if read.mapped:
+                    ensembl_id = str(read).split('\t')[2]
+                    read['XT'] = ensembl_id
+                    out_sam.write(read)
 
-        SAMTOOLS_COMMAND = f"samtools view -S -b mapped.sam > mapped.bam && samtools sort -@ {threads} mapped.bam -o sorted.bam && samtools index sorted.bam"
-        check_call(SAMTOOLS_COMMAND)
-        UMI_DEDUP_COMMAND = "umi_tools count --per-gene --gene-tag=XT --per-cell -I assigned_sorted.bam -S counts.tsv.gz"
-        check_call(UMI_DEDUP_COMMAND)
+    SAMTOOLS_COMMAND = f"samtools view -S -b mapped.sam > mapped.bam && samtools sort -@ {threads} mapped.bam -o sorted.bam && samtools index sorted.bam"
+    check_call(SAMTOOLS_COMMAND)
+    UMI_DEDUP_COMMAND = "umi_tools count --per-gene --gene-tag=XT --per-cell -I assigned_sorted.bam -S counts.tsv.gz"
+    check_call(UMI_DEDUP_COMMAND)
 
-        adata = anndata.read_umi_tools("counts.tsv.gz")
-        adata.write("expr.h5ad")
+    adata = anndata.read_umi_tools("counts.tsv.gz")
+    adata.write("expr.h5ad")
 
 if __name__ == "__main__":
     manhole.install(activate_on="USR1")
 
     p = ArgumentParser()
-    p.add_argument("assay", choices=list(Assay), type=Assay)
     p.add_argument("trimmed_fastq_dir", type=Path)
     p.add_argument("metadata_dir", type=Path)
     p.add_argument("--expected-cell-count", type=int)
@@ -223,7 +220,6 @@ if __name__ == "__main__":
     args = p.parse_args()
 
     main(
-        args.assay,
         args.orig_fastq_dir,
         args.trimmed_fastq_dir,
         args.metadata_dir,
