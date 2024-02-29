@@ -137,8 +137,6 @@ steps:
         source: img_dir
       metadata_dir:
         source: metadata_dir
-      metadata_json:
-        source: adjust_barcodes/metadata_json
     out:
       - annotated_h5ad_file
     run: salmon-rnaseq/steps/salmon-quantification/annotate-cells.cwl
