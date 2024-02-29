@@ -120,7 +120,7 @@ steps:
       trimmed_fastq_dir:
         source: trim_reads/trimmed_fastq_dir
       metadata_dir:
-        source: fastq_dir
+        source: metadata_dir
       threads:
         source: threads
       expected_cell_count:
