@@ -79,9 +79,6 @@ outputs:
     outputSource: scanpy_analysis/marker_gene_plot_logreg
     type: File
     label: "Cluster marker genes, logreg method"
-  ome_tiff_file:
-    outputSource: ome_tiff/ome_tiff_file
-    type: File?
   squidpy_annotated_h5ad:
     outputSource: squidpy_analysis/squidpy_annotated_h5ad
     type: File?
