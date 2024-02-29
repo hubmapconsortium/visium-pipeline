@@ -11,8 +11,8 @@ label: Run BWA alignment tool on FASTQ input
 # arguments are hardcoded in quantification.py
 
 inputs:
-  adj_fastq_dir:
-    type: Directory[]
+  trimmed_fastq_dir:
+    type: Directory
     inputBinding:
       position: 1
   metadata_dir:
