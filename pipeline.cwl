@@ -9,7 +9,7 @@ requirements:
 inputs:
   fastq_dir:
     label: "Directory containing FASTQ files"
-    type: Directory
+    type: Directory[]
   img_dir:
     label: "Directory containing TIFF files"
     type: Directory
@@ -107,10 +107,18 @@ steps:
         source: fastq_dir
     out: [adj_fastq_dir]
     run: steps/adjust-barcodes.cwl
-  quantification:
+  trim_reads:
     in:
       adj_fastq_dir:
         source: adjust_barcodes/adj_fastq_dir
+      threads:
+        source: threads
+    out: [trimmed_fastq_dir]
+    run: steps/trim-reads.cwl
+  quantification:
+    in:
+      trimmed_fastq_dir:
+        source: trim_reads/trimmed_fastq_dir
       metadata_dir:
         source: fastq_dir
       threads:
@@ -141,7 +149,7 @@ steps:
       - annotated_h5ad_file
     run: salmon-rnaseq/steps/salmon-quantification/annotate-cells.cwl
   fastqc:
-    scatter: [fastq_dir]
+    scatter: fastq_dir
     scatterMethod: dotproduct
     in:
       fastq_dir:

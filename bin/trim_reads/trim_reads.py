@@ -69,7 +69,7 @@ def trim_reads_visium_ffpe(fastq_r1: Path, fastq_r2: Path, output_subdir: Path):
             f.write(read.serialize())
             f.write('\n')
 
-def main(orig_fastq_dirs: Sequence[Path], adj_fastq_dir: Path, threads: int):
+def main(adj_fastq_dir: Path, threads: int):
     fastq_pairs: Iterable[Sequence[Path]]
     fastq_pairs = [find_adj_fastq_files(adj_fastq_dir)]
 
@@ -92,8 +92,7 @@ def main(orig_fastq_dirs: Sequence[Path], adj_fastq_dir: Path, threads: int):
 if __name__ == "__main__":
     p = ArgumentParser()
     p.add_argument("adj_fastq_dir", type=Path)
-    p.add_argument("orig_fastq_dir", type=Path, nargs="+")
     p.add_argument("-p", "--threads", type=int)
     args = p.parse_args()
 
-    main(args.orig_fastq_dir, args.adj_fastq_dir, args.threads)
+    main(args.adj_fastq_dir, args.threads)

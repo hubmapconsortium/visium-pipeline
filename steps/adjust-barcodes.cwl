@@ -8,7 +8,7 @@ baseCommand: /opt/adjust_barcodes.py
 
 inputs:
   fastq_dir:
-    type: Directory
+    type: Directory[]
     inputBinding:
       position: 1
 outputs:

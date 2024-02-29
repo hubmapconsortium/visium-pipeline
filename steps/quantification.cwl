@@ -12,7 +12,7 @@ label: Run BWA alignment tool on FASTQ input
 
 inputs:
   adj_fastq_dir:
-    type: Directory
+    type: Directory[]
     inputBinding:
       position: 1
   metadata_dir:
