@@ -9,9 +9,10 @@ import manhole
 from fastq_utils import Read, fastq_reader, find_grouped_fastq_files, revcomp
 
 from common import BARCODE_UMI_FASTQ_PATH, TRANSCRIPT_FASTQ_PATH
+from os import walk
 
 BARCODE_LENGTH = 16
-BARCODE_STARTS = [12]
+BARCODE_STARTS = [0]
 BARCODE_SEGMENTS = [slice(start, start + BARCODE_LENGTH) for start in BARCODE_STARTS]
 UMI_SEGMENT = slice(16, 28)
 
@@ -29,6 +30,17 @@ def read_barcode_allowlist(barcode_filename: Path) -> Set[str]:
     with open(barcode_filename) as f:
         return set(f.read().split())
 
+def find_files(directory: Path, pattern: str) -> Iterable[Path]:
+    for dirpath_str, dirnames, filenames in walk(directory):
+        dirpath = Path(dirpath_str)
+        for filename in filenames:
+            filepath = dirpath / filename
+            if filepath.match(pattern):
+                yield filepath
+
+def get_visium_plate_version(directory: Path) -> int:
+    gpr_file = list(find_files(directory, "*.gpr"))[0]
+    return int(gpr_file.stem[1])
 
 def main(
     fastq_dirs: Iterable[Path],
@@ -36,6 +48,10 @@ def main(
     output_dir: Path = Path(),
     barcode_filename: Path = Path(),
 ):
+    output_dir.mkdir(exist_ok=True, parents=True)
+
+    visium_version_number = get_visium_plate_version(fastq_dirs[0])
+
     barcode_filename = f"/opt/visium-v{visium_version_number}.txt"
 
     barcode_allowlist = read_barcode_allowlist(barcode_filename)

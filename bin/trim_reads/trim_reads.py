@@ -61,6 +61,9 @@ def trim_seq_and_qual(read):
     return Read(read.read_id, read.seq[0:50], read.unused, read.qual[0:50])
 
 def trim_reads_visium_ffpe(fastq_r1: Path, fastq_r2: Path, output_subdir: Path):
+    print("Copying", quote(fspath(fastq_r1)), "to", quote(fspath(output_subdir)))
+    copy(fastq_r1, output_subdir)
+
     reads = fastq_reader(fastq_r2)
     trimmed_reads = [trim_seq_and_qual(read) for read in reads]
     fastq_r2_out = output_subdir / fastq_r2.name

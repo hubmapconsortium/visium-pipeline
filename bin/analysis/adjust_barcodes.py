@@ -15,7 +15,6 @@ if __name__ == "__main__":
     manhole.install(activate_on="USR1")
 
     p = ArgumentParser()
-    p.add_argument("assay", choices=list(Assay), type=Assay)
     p.add_argument("directory", type=Path, nargs="+")
     args = p.parse_args()
 
