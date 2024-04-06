@@ -175,8 +175,11 @@ def main(
     visium_probe_set_version = get_visium_probe_set_version(metadata_dir, visium_probe_set_version)
 
     index = f"/opt/v{visium_probe_set_version}.fasta"
+    copy_command = f"ln -s {index} v{visium_probe_set_version}.fasta"
+    check_call(copy_command, shell=True)
+    index = f"v{visium_probe_set_version}.fasta"
 
-    fastq_pairs = list(find_grouped_fastq_files(trimmed_fastq_dir, 2))
+    fastq_pairs = list(find_adj_fastq_files(trimmed_fastq_dir))
 
     if not fastq_pairs:
         raise ValueError("No FASTQ files found")
@@ -184,25 +187,32 @@ def main(
     barcode_file = f'/opt/visium-v{visium_plate_version}.txt'
     r1_fastq_file, r2_fastq_file = fastq_pairs[0]
     BWA_INDEX_COMMAND = f"bwa index {index}"
-    UMI_EXTRACT_COMMAND = f"umi_tools extract --extract-method=string --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNNNN --stdin {r1_fastq_file} --stdout extracted_barcode_umi.fastq.gz --read2-in={r2_fastq_file} --read2-out=extracted_transcript.tar.gz"
+    check_call(BWA_INDEX_COMMAND, shell=True)
+    UMI_EXTRACT_COMMAND = f"umi_tools extract --extract-method=string --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNNNN --stdin {r1_fastq_file} --stdout extracted_barcode_umi.fastq.gz --read2-in={r2_fastq_file} --read2-out=extracted_transcript.fastq.gz"
     check_call(UMI_EXTRACT_COMMAND, shell=True)
 
-    check_call(BWA_INDEX_COMMAND)
-    BWA_COMMAND = f"bwa mem -M -t {threads} {index} {r1_fastq_file} {r2_fastq_file} > out.sam"
-    check_call(BWA_COMMAND)
+    BWA_COMMAND = f"bwa mem -M -t {threads} {index} extracted_barcode_umi.fastq.gz extracted_transcript.fastq.gz > out.sam"
+    check_call(BWA_COMMAND, shell=True)
 
+    mapped = 0
+    total = 0
     with simplesam.Reader(open('out.sam')) as in_sam:
         with simplesam.Writer(open('mapped.sam', 'w')) as out_sam:
             for read in in_sam:
+                total += 1
                 if read.mapped:
+                    mapped += 1
                     ensembl_id = str(read).split('\t')[2]
                     read['XT'] = ensembl_id
                     out_sam.write(read)
 
-    SAMTOOLS_COMMAND = f"samtools view -S -b mapped.sam > mapped.bam && samtools sort -@ {threads} mapped.bam -o sorted.bam && samtools index sorted.bam"
-    check_call(SAMTOOLS_COMMAND)
-    UMI_DEDUP_COMMAND = "umi_tools count --per-gene --gene-tag=XT --per-cell -I assigned_sorted.bam -S counts.tsv.gz"
-    check_call(UMI_DEDUP_COMMAND)
+    print(f"Mapping rate with visium probe set version {visium_probe_set_version}: {mapped / total}")
+    print(f"Total reads: {total}")
+
+    SAMTOOLS_COMMAND = f"samtools view -S -b -t /opt/v{visium_probe_set_version}.fasta.fai mapped.sam > mapped.bam && samtools sort -@ {threads} mapped.bam -o sorted.bam && samtools index sorted.bam"
+    check_call(SAMTOOLS_COMMAND, shell=True)
+    UMI_DEDUP_COMMAND = "umi_tools count --per-gene --gene-tag=XT --per-cell -I sorted.bam -S counts.tsv.gz"
+    check_call(UMI_DEDUP_COMMAND, shell=True)
 
     adata = anndata.read_umi_tools("counts.tsv.gz")
     adata.write("expr.h5ad")
@@ -220,7 +230,6 @@ if __name__ == "__main__":
     args = p.parse_args()
 
     main(
-        args.orig_fastq_dir,
         args.trimmed_fastq_dir,
         args.metadata_dir,
         args.expected_cell_count,
