@@ -103,6 +103,8 @@ outputs:
 steps:
   adjust_barcodes:
     in:
+      metadata_dir:
+        source: metadata_dir
       fastq_dir:
         source: fastq_dir
     out: [adj_fastq_dir]
