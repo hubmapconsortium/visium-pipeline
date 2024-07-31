@@ -144,8 +144,12 @@ def main(
     )
     check_call(BWA_COMMAND, shell=True)
 
+    SAMTOOLS_COMMAND = f"samtools view -S -b -t /opt/v{visium_probe_set_version}.fasta.fai out.sam > out.bam && samtools sort -@ {threads} out.bam -o sorted.bam && samtools index sorted.bam"
+
+    check_call(SAMTOOLS_COMMAND, shell=True)
+
     UMI_DEDUP_COMMAND = (
-        "umi_tools count --per-contig --per-cell -I out.sam -S counts.tsv.gz"
+        "umi_tools count --per-contig --per-cell -I sorted.bam -S counts.tsv.gz"
     )
     check_call(UMI_DEDUP_COMMAND, shell=True)
 

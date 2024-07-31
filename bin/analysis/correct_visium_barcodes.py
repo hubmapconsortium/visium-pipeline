@@ -46,9 +46,7 @@ def get_visium_plate_version(directory: Path) -> int:
 def main(
     metadata_dir: Path,
     fastq_dirs: Iterable[Path],
-    visium_version_number: int = 1,
     output_dir: Path = Path(),
-    barcode_filename: Path = Path(),
 ):
     output_dir.mkdir(exist_ok=True, parents=True)
 
@@ -102,11 +100,9 @@ if __name__ == "__main__":
     p = ArgumentParser()
     p.add_argument("metadata_dir", type=Path)
     p.add_argument("fastq_dirs", type=Path, nargs="+")
-    p.add_argument("visium_version_number", type=int, default=1)
     args = p.parse_args()
 
     main(
-        metadata_dir=metadata_dir,
+        metadata_dir=args.metadata_dir,
         fastq_dirs=args.fastq_dirs,
-        barcode_filename=args.barcode_list_file,
     )
