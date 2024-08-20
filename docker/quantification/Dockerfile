@@ -9,6 +9,8 @@ RUN apt-get update \
     && apt-get -y install git\
     && apt-get -y install \
     python3-pip \
+    && apt-get -y install libncurses5 \
+
  && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py39_4.12.0-Linux-x86_64.sh -O /tmp/miniconda.sh \

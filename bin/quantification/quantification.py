@@ -140,7 +140,7 @@ def main(
     check_call(UMI_EXTRACT_COMMAND, shell=True)
 
     BWA_COMMAND = (
-        f"bwa mem -M -t {threads} {index} extracted_transcript.fastq.gz -o out.sam"
+        f"bwa mem -M -t {threads} {index} extracted_transcript.fastq.gz > out.sam"
     )
     check_call(BWA_COMMAND, shell=True)
 
