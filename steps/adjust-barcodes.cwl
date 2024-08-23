@@ -7,10 +7,14 @@ requirements:
 baseCommand: /opt/adjust_barcodes.py
 
 inputs:
+  metadata_dir:
+    type: Directory
+    inputBinding:
+      position: 1
   fastq_dir:
     type: Directory[]
     inputBinding:
-      position: 1
+      position: 2
 outputs:
   adj_fastq_dir:
     type: Directory

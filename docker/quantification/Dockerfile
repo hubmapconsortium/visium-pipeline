@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3
+FROM ubuntu:20.04
 
 WORKDIR /opt
 
@@ -9,7 +9,15 @@ RUN apt-get update \
     && apt-get -y install git\
     && apt-get -y install \
     python3-pip \
+    && apt-get -y install libncurses5 \
+
  && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
+
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py39_4.12.0-Linux-x86_64.sh -O /tmp/miniconda.sh \
+    && /bin/bash /tmp/miniconda.sh -b -p /opt/conda \
+    && rm /tmp/miniconda.sh
+
+ENV PATH /opt/conda/bin:$PATH
 
 RUN curl https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/v1_index.tar.gz | tar -xzf -
 RUN curl https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/v2_index.tar.gz | tar -xzf -

@@ -103,6 +103,8 @@ outputs:
 steps:
   adjust_barcodes:
     in:
+      metadata_dir:
+        source: metadata_dir
       fastq_dir:
         source: fastq_dir
     out: [adj_fastq_dir]
@@ -165,11 +167,7 @@ steps:
       assay:
         source: assay
       h5ad_file:
-        source: quantification/h5ad_file
-      metadata_dir:
-        source: fastq_dir
-      img_dir:
-        source: img_dir
+        source: annotate_cells/annotated_h5ad_file
     out:
       - filtered_data_h5ad
       - umap_plot
@@ -185,7 +183,7 @@ steps:
       assay:
         source: assay
       h5ad_file:
-        source: quantification/h5ad_file
+        source: scanpy_analysis/filtered_data_h5ad
       img_dir:
         source: img_dir
     out:
@@ -201,7 +199,7 @@ steps:
   compute_qc_results:
     in:
       h5ad_primary:
-        source: quantification/h5ad_file
+        source: annotate_cells/annotated_h5ad_file
       h5ad_secondary:
         source: scanpy_analysis/filtered_data_h5ad
       bam_file:

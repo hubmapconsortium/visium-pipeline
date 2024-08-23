@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 from argparse import ArgumentParser
 from itertools import chain
+from os import walk
 from pathlib import Path
 from typing import Iterable, Mapping, Set
 
 import barcodeutils as bu
 import manhole
-from fastq_utils import Read, fastq_reader, find_grouped_fastq_files, revcomp
-
 from common import BARCODE_UMI_FASTQ_PATH, TRANSCRIPT_FASTQ_PATH
-from os import walk
+from fastq_utils import Read, fastq_reader, find_grouped_fastq_files, revcomp
 
 BARCODE_LENGTH = 16
 BARCODE_STARTS = [0]
@@ -24,11 +23,11 @@ class KeyDefaultDict(dict):
         return key
 
 
-
 def read_barcode_allowlist(barcode_filename: Path) -> Set[str]:
     print("Reading barcode allowlist from", barcode_filename)
     with open(barcode_filename) as f:
         return set(f.read().split())
+
 
 def find_files(directory: Path, pattern: str) -> Iterable[Path]:
     for dirpath_str, dirnames, filenames in walk(directory):
@@ -38,19 +37,20 @@ def find_files(directory: Path, pattern: str) -> Iterable[Path]:
             if filepath.match(pattern):
                 yield filepath
 
+
 def get_visium_plate_version(directory: Path) -> int:
     gpr_file = list(find_files(directory, "*.gpr"))[0]
     return int(gpr_file.stem[1])
 
+
 def main(
+    metadata_dir: Path,
     fastq_dirs: Iterable[Path],
-    visium_version_number: int = 1,
     output_dir: Path = Path(),
-    barcode_filename: Path = Path(),
 ):
     output_dir.mkdir(exist_ok=True, parents=True)
 
-    visium_version_number = get_visium_plate_version(fastq_dirs[0])
+    visium_version_number = get_visium_plate_version(metadata_dir)
 
     barcode_filename = f"/opt/visium-v{visium_version_number}.txt"
 
@@ -98,11 +98,11 @@ if __name__ == "__main__":
     manhole.install(activate_on="USR1")
 
     p = ArgumentParser()
+    p.add_argument("metadata_dir", type=Path)
     p.add_argument("fastq_dirs", type=Path, nargs="+")
-    p.add_argument("visium_version_number", type=int, default=1)
     args = p.parse_args()
 
     main(
+        metadata_dir=args.metadata_dir,
         fastq_dirs=args.fastq_dirs,
-        barcode_filename=args.barcode_list_file,
     )
