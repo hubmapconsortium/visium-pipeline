@@ -3,14 +3,10 @@ class: CommandLineTool
 label: Compute QC metrics
 requirements:
   DockerRequirement:
-    dockerPull: hubmap/visium-analysis:1.0.2
+    dockerPull: hubmap/visium-analysis:latest
 baseCommand: /opt/compute_qc_metrics.py
 
 inputs:
-  assay:
-    type: string
-    inputBinding:
-      position: 0
   h5ad_primary:
     type: File
     inputBinding:

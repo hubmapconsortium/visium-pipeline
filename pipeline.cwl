@@ -9,19 +9,17 @@ requirements:
 inputs:
   fastq_dir:
     label: "Directory containing FASTQ files"
-    type: Directory
+    type: Directory[]
   img_dir:
     label: "Directory containing TIFF files"
     type: Directory
   metadata_dir:
     label: "Directory containing gpr file and metadata.tsv"
     type: Directory
-  spaceranger_dir:
-    label: "Directory containing spaceranger outputs"
-    type: Directory
   assay:
     label: "scRNA-seq assay"
     type: string
+    default: "visium-ff"
   threads:
     label: "Number of threads for Salmon"
     type: int
@@ -81,9 +79,6 @@ outputs:
     outputSource: scanpy_analysis/marker_gene_plot_logreg
     type: File
     label: "Cluster marker genes, logreg method"
-  ome_tiff_file:
-    outputSource: ome_tiff/ome_tiff_file
-    type: File?
   squidpy_annotated_h5ad:
     outputSource: squidpy_analysis/squidpy_annotated_h5ad
     type: File?
@@ -108,20 +103,26 @@ outputs:
 steps:
   adjust_barcodes:
     in:
+      metadata_dir:
+        source: metadata_dir
       fastq_dir:
         source: fastq_dir
-      assay:
-        source: assay
     out: [adj_fastq_dir]
     run: steps/adjust-barcodes.cwl
-  quantification:
+  trim_reads:
     in:
       adj_fastq_dir:
         source: adjust_barcodes/adj_fastq_dir
+      threads:
+        source: threads
+    out: [trimmed_fastq_dir]
+    run: steps/trim-reads.cwl
+  quantification:
+    in:
+      trimmed_fastq_dir:
+        source: trim_reads/trimmed_fastq_dir
       metadata_dir:
-        source: fastq_dir
-      assay:
-        source: assay
+        source: metadata_dir
       threads:
         source: threads
       expected_cell_count:
@@ -146,13 +147,11 @@ steps:
         source: img_dir
       metadata_dir:
         source: metadata_dir
-      metadata_json:
-        source: adjust_barcodes/metadata_json
     out:
       - annotated_h5ad_file
-    run: steps/annotate-cells.cwl
+    run: salmon-rnaseq/steps/salmon-quantification/annotate-cells.cwl
   fastqc:
-    scatter: [fastq_dir]
+    scatter: fastq_dir
     scatterMethod: dotproduct
     in:
       fastq_dir:
@@ -161,18 +160,14 @@ steps:
         source: threads
     out:
       - fastqc_dir
-    run: steps/fastqc.cwl
+    run: salmon-rnaseq/steps/fastqc.cwl
     label: "Run fastqc on all fastq files in fastq directory"
   scanpy_analysis:
     in:
       assay:
         source: assay
       h5ad_file:
-        source: quantification/h5ad_file
-      metadata_dir:
-        source: fastq_dir
-      img_dir:
-        source: img_dir
+        source: annotate_cells/annotated_h5ad_file
     out:
       - filtered_data_h5ad
       - umap_plot
@@ -181,14 +176,14 @@ steps:
       - dispersion_plot
       - umap_density_plot
       - spatial_plot
-    run: steps/scanpy-analysis.cwl
+    run: salmon-rnaseq/steps/scanpy-analysis.cwl
     label: "Secondary analysis via ScanPy"
   squidpy_analysis:
     in:
       assay:
         source: assay
       h5ad_file:
-        source: quantification/h5ad_file
+        source: scanpy_analysis/filtered_data_h5ad
       img_dir:
         source: img_dir
     out:
@@ -199,25 +194,12 @@ steps:
       - ripley_plot
       - centrality_scores_plot
       - spatial_plot
-    run: steps/squidpy-analysis.cwl
-    label: "Spatial analysis via SquidPy"
-  spaceranger_conversion:
-    in:
-      assay:
-        source: assay
-      spaceranger_dir:
-        source: spaceranger_dir
-    out:
-      - raw_spaceranger_h5ad
-      - filtered_spaceranger_h5ad
-    run: steps/spaceranger-conversion.cwl
+    run: salmon-rnaseq/steps/squidpy-analysis.cwl
     label: "Spatial analysis via SquidPy"
   compute_qc_results:
     in:
-      assay:
-        source: assay
       h5ad_primary:
-        source: quantification/h5ad_file
+        source: annotate_cells/annotated_h5ad_file
       h5ad_secondary:
         source: scanpy_analysis/filtered_data_h5ad
       bam_file:

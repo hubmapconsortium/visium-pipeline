@@ -4,30 +4,30 @@ import re
 from argparse import ArgumentParser
 from os import environ, fspath, walk
 from pathlib import Path
-from subprocess import check_call, check_output, CalledProcessError
+from subprocess import CalledProcessError, check_call, check_output
 from typing import Iterable, Optional, Sequence, Tuple
-import pandas as pd
 
-import simplesam
-import manhole
 import anndata
-from fastq_utils import find_grouped_fastq_files
-
+import manhole
+import pandas as pd
+import simplesam
 from common import (
     BARCODE_UMI_FASTQ_PATH,
     TRANSCRIPT_FASTQ_GZ_PATH,
     TRANSCRIPT_FASTQ_PATH,
     Assay,
 )
+from fastq_utils import find_grouped_fastq_files
 
-base_index = '/opt/gencode.v35.intron-exon.sidx'
-base_transcript_map = '/opt/gencode.v35.annotation.expanded.tx2gene.tsv'
+base_index = "/opt/gencode.v35.intron-exon.sidx"
+base_transcript_map = "/opt/gencode.v35.annotation.expanded.tx2gene.tsv"
 
 cell_count_filename = "extras/expected_cell_count.txt"
 metadata_filename_pattern = re.compile(r"^[0-9A-Fa-f]{32}-metadata.tsv$")
 metadata_cell_count_field = "expected_cell_count"
 metadata_probe_set_version_field = "visium_probe_set_version"
 barcode_whitelist_path = Path("barcode_whitelist.txt")
+
 
 def find_metadata_file(directory: Path) -> Optional[Path]:
     """
@@ -39,6 +39,7 @@ def find_metadata_file(directory: Path) -> Optional[Path]:
         if metadata_filename_pattern.match(file_path.name):
             return file_path
 
+
 def find_files(directory: Path, pattern: str) -> Iterable[Path]:
     for dirpath_str, dirnames, filenames in walk(directory):
         dirpath = Path(dirpath_str)
@@ -47,11 +48,15 @@ def find_files(directory: Path, pattern: str) -> Iterable[Path]:
             if filepath.match(pattern):
                 yield filepath
 
+
 def get_visium_plate_version(directory: Path) -> int:
     gpr_file = list(find_files(directory, "*.gpr"))[0]
     return int(gpr_file.stem[1])
 
-def get_visium_probe_set_version(directory: Path, probe_set_version_parameter: int = None)-> int:
+
+def get_visium_probe_set_version(
+    directory: Path, probe_set_version_parameter: int = None
+) -> int:
     probe_set_version_metadata = None
     maybe_metadata_file = find_metadata_file(directory)
     if maybe_metadata_file and maybe_metadata_file.is_file():
@@ -62,12 +67,16 @@ def get_visium_probe_set_version(directory: Path, probe_set_version_parameter: i
                 metadata_probe_set_version_field in metadata
                 and metadata[metadata_probe_set_version_field].isdigit()
             ):
-                probe_set_version_metadata = int(metadata[metadata_probe_set_version_field])
+                probe_set_version_metadata = int(
+                    metadata[metadata_probe_set_version_field]
+                )
                 print(
                     f"Read expected cell count from {maybe_metadata_file}: {probe_set_version_metadata}"
                 )
 
-    present_probe_set_versions = sum(x is not None for x in [probe_set_version_parameter, probe_set_version_metadata])
+    present_probe_set_versions = sum(
+        x is not None for x in [probe_set_version_parameter, probe_set_version_metadata]
+    )
     if present_probe_set_versions == 0:
         return None
     elif present_probe_set_versions == 1:
@@ -81,69 +90,6 @@ def get_visium_probe_set_version(directory: Path, probe_set_version_parameter: i
                 f"and {probe_set_version_metadata} in {maybe_metadata_file}"
             )
             raise ValueError(message)
-
-def read_expected_cell_count(directory: Path) -> Optional[int]:
-    cell_count_from_file = None
-    cell_count_metadata = None
-
-    cell_count_file = directory / cell_count_filename
-    if cell_count_file.is_file():
-        with open(cell_count_file) as f:
-            cell_count_from_file = int(f.read().strip())
-            print(f"Read expected cell count from {cell_count_file}: {cell_count_from_file}")
-
-    maybe_metadata_file = find_metadata_file(directory)
-    if maybe_metadata_file and maybe_metadata_file.is_file():
-        with open(maybe_metadata_file, newline="") as f:
-            r = csv.DictReader(f, delimiter="\t")
-            metadata = next(r)
-            if (
-                metadata_cell_count_field in metadata
-                and metadata[metadata_cell_count_field].isdigit()
-            ):
-                cell_count_metadata = int(metadata[metadata_cell_count_field])
-                print(
-                    f"Read expected cell count from {maybe_metadata_file}: {cell_count_metadata}"
-                )
-
-    present_cell_counts = sum(x is not None for x in [cell_count_from_file, cell_count_metadata])
-    if present_cell_counts == 0:
-        return None
-    elif present_cell_counts == 1:
-        return cell_count_from_file or cell_count_metadata or 0
-    else:
-        if cell_count_from_file == cell_count_metadata:
-            return cell_count_from_file
-        else:
-            message = (
-                f"Found mismatched cell counts: {cell_count_from_file} in {cell_count_file}, "
-                f"and {cell_count_metadata} in {maybe_metadata_file}"
-            )
-            raise ValueError(message)
-
-
-def read_expected_cell_counts(directories: Sequence[Path]) -> Optional[int]:
-    cell_counts = []
-    for directory in directories:
-        cell_count = read_expected_cell_count(directory)
-        if cell_count is not None:
-            cell_counts.append(cell_count)
-
-    dirs_with_cell_counts = len(cell_counts)
-    if dirs_with_cell_counts == 0:
-        return None
-    elif dirs_with_cell_counts == len(directories):
-        total_expected = sum(cell_counts)
-        print("Total expected cells:", total_expected)
-        return total_expected
-    else:
-        message = (
-            f"Found expected cell counts in {dirs_with_cell_counts} of "
-            f"{len(directories)} directories, need 0 or {len(directories)} "
-            f"input directories with cell counts (can't mix auto-detection "
-            f"and guided cell barcode counting)"
-        )
-        raise ValueError(message)
 
 
 def find_adj_fastq_files(directory: Path) -> Iterable[Tuple[Path, Path]]:
@@ -162,7 +108,6 @@ def find_adj_fastq_files(directory: Path) -> Iterable[Tuple[Path, Path]]:
 
 
 def main(
-    assay: Assay,
     trimmed_fastq_dir: Path,
     metadata_dir: Path,
     expected_cell_count: Optional[int],
@@ -173,47 +118,49 @@ def main(
     threads = threads or 1
 
     visium_plate_version = get_visium_plate_version(metadata_dir)
-    visium_probe_set_version = get_visium_probe_set_version(metadata_dir, visium_probe_set_version)
+    visium_probe_set_version = get_visium_probe_set_version(
+        metadata_dir, visium_probe_set_version
+    )
 
     index = f"/opt/v{visium_probe_set_version}.fasta"
+    copy_command = f"ln -s {index} v{visium_probe_set_version}.fasta"
+    check_call(copy_command, shell=True)
+    index = f"v{visium_probe_set_version}.fasta"
 
-    fastq_pairs = list(find_grouped_fastq_files(trimmed_fastq_dir, 2))
+    fastq_pairs = list(find_adj_fastq_files(trimmed_fastq_dir))
 
     if not fastq_pairs:
         raise ValueError("No FASTQ files found")
 
-    if assay in {Assay.VISIUM_FFPE, Assay.VISIUM_FF}:
-        barcode_file = f'/opt/visium-v{visium_plate_version}.txt'
-        r1_fastq_file, r2_fastq_file = fastq_pairs[0]
-        BWA_INDEX_COMMAND = f"bwa index {index}"
-        UMI_EXTRACT_COMMAND = f"umi_tools extract --extract-method=string --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNNNN --stdin {r1_fastq_file} --stdout extracted_barcode_umi.fastq.gz --read2-in={r2_fastq_file} --read2-out=extracted_transcript.tar.gz"
-        check_call(UMI_EXTRACT_COMMAND, shell=True)
+    barcode_file = f"/opt/visium-v{visium_plate_version}.txt"
+    r1_fastq_file, r2_fastq_file = fastq_pairs[0]
+    BWA_INDEX_COMMAND = f"bwa index {index}"
+    check_call(BWA_INDEX_COMMAND, shell=True)
+    UMI_EXTRACT_COMMAND = f"umi_tools extract --extract-method=string --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNNNN --stdin {r1_fastq_file} --stdout extracted_barcode_umi.fastq.gz --read2-in={r2_fastq_file} --read2-out=extracted_transcript.fastq.gz"
+    check_call(UMI_EXTRACT_COMMAND, shell=True)
 
-        check_call(BWA_INDEX_COMMAND)
-        BWA_COMMAND = f"bwa mem -M -t {threads} {index} {r1_fastq_file} {r2_fastq_file} > out.sam"
-        check_call(BWA_COMMAND)
+    BWA_COMMAND = (
+        f"bwa mem -M -t {threads} {index} extracted_transcript.fastq.gz > out.sam"
+    )
+    check_call(BWA_COMMAND, shell=True)
 
-        with simplesam.Reader(open('out.sam')) as in_sam:
-            with simplesam.Writer(open('mapped.sam', 'w')) as out_sam:
-                for read in in_sam:
-                    if read.mapped:
-                        ensembl_id = str(read).split('\t')[2]
-                        read['XT'] = ensembl_id
-                        out_sam.write(read)
+    SAMTOOLS_COMMAND = f"samtools view -S -b -t /opt/v{visium_probe_set_version}.fasta.fai out.sam > out.bam && samtools sort -@ {threads} out.bam -o sorted.bam && samtools index sorted.bam"
 
-        SAMTOOLS_COMMAND = f"samtools view -S -b mapped.sam > mapped.bam && samtools sort -@ {threads} mapped.bam -o sorted.bam && samtools index sorted.bam"
-        check_call(SAMTOOLS_COMMAND)
-        UMI_DEDUP_COMMAND = "umi_tools count --per-gene --gene-tag=XT --per-cell -I assigned_sorted.bam -S counts.tsv.gz"
-        check_call(UMI_DEDUP_COMMAND)
+    check_call(SAMTOOLS_COMMAND, shell=True)
 
-        adata = anndata.read_umi_tools("counts.tsv.gz")
-        adata.write("expr.h5ad")
+    UMI_DEDUP_COMMAND = (
+        "umi_tools count --per-contig --per-cell -I sorted.bam -S counts.tsv.gz"
+    )
+    check_call(UMI_DEDUP_COMMAND, shell=True)
+
+    adata = anndata.read_umi_tools("counts.tsv.gz")
+    adata.write("expr.h5ad")
+
 
 if __name__ == "__main__":
     manhole.install(activate_on="USR1")
 
     p = ArgumentParser()
-    p.add_argument("assay", choices=list(Assay), type=Assay)
     p.add_argument("trimmed_fastq_dir", type=Path)
     p.add_argument("metadata_dir", type=Path)
     p.add_argument("--expected-cell-count", type=int)
@@ -223,8 +170,6 @@ if __name__ == "__main__":
     args = p.parse_args()
 
     main(
-        args.assay,
-        args.orig_fastq_dir,
         args.trimmed_fastq_dir,
         args.metadata_dir,
         args.expected_cell_count,

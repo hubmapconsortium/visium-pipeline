@@ -81,10 +81,8 @@ def write_alignment_qc(bam_file):
     with open(output_file, "w") as text_file:
         json.dump(qc_report, text_file, indent=4)
 
-def main(assay: Assay, h5ad_primary: Path, bam_file: Path):
+def main(h5ad_primary: Path, bam_file: Path):
     expr_primary = anndata.read_h5ad(h5ad_primary)
-    if assay.secondary_analysis_layer in expr_primary.layers:
-        expr_primary.X = expr_primary.layers[assay.secondary_analysis_layer]
     expr_primary.var_names_make_unique()
 
     write_scanpy_qc(expr_primary)
