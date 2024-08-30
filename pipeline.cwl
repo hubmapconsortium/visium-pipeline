@@ -10,11 +10,8 @@ inputs:
   fastq_dir:
     label: "Directory containing FASTQ files"
     type: Directory[]
-  img_dir:
-    label: "Directory containing TIFF files"
-    type: Directory
   metadata_dir:
-    label: "Directory containing gpr file and metadata.tsv"
+    label: "Directory containing and metadata.tsv"
     type: Directory
   assay:
     label: "scRNA-seq assay"
@@ -28,8 +25,8 @@ inputs:
     type: int?
   keep_all_barcodes:
     type: boolean?
-  visium_probe_set_version:
-    type: int?
+  probe_set:
+    type: str
 outputs:
   count_matrix_h5ad:
     outputSource: quantification/h5ad_file
@@ -79,27 +76,6 @@ outputs:
     outputSource: scanpy_analysis/marker_gene_plot_logreg
     type: File
     label: "Cluster marker genes, logreg method"
-  squidpy_annotated_h5ad:
-    outputSource: squidpy_analysis/squidpy_annotated_h5ad
-    type: File?
-  neighborhood_enrichment_plot:
-    outputSource: squidpy_analysis/neighborhood_enrichment_plot
-    type: File?
-  co_occurrence_plot:
-    outputSource: squidpy_analysis/co_occurrence_plot
-    type: File?
-  interaction_matrix_plot:
-    outputSource: squidpy_analysis/interaction_matrix_plot
-    type: File?
-  centrality_scores_plot:
-    outputSource: squidpy_analysis/centrality_scores_plot
-    type: File?
-  ripley_plot:
-    outputSource: squidpy_analysis/ripley_plot
-    type: File?
-  squidpy_spatial_plot:
-    outputSource: squidpy_analysis/spatial_plot
-    type: File?
 steps:
   adjust_barcodes:
     in:
@@ -129,27 +105,12 @@ steps:
         source: expected_cell_count
       keep_all_barcodes:
         source: keep_all_barcodes
-      visium_probe_set_version:
-        source: visium_probe_set_version
+      probe_set:
+        source: probe_set
     out:
       - h5ad_file
       - bam_file
     run: steps/quantification.cwl
-  annotate_cells:
-    in:
-      orig_fastq_dirs:
-        source: fastq_dir
-      assay:
-        source: assay
-      h5ad_file:
-        source: quantification/h5ad_file
-      img_dir:
-        source: img_dir
-      metadata_dir:
-        source: metadata_dir
-    out:
-      - annotated_h5ad_file
-    run: salmon-rnaseq/steps/salmon-quantification/annotate-cells.cwl
   fastqc:
     scatter: fastq_dir
     scatterMethod: dotproduct
@@ -167,7 +128,7 @@ steps:
       assay:
         source: assay
       h5ad_file:
-        source: annotate_cells/annotated_h5ad_file
+        source: quantification/h5ad_file
     out:
       - filtered_data_h5ad
       - umap_plot
@@ -178,28 +139,10 @@ steps:
       - spatial_plot
     run: salmon-rnaseq/steps/scanpy-analysis.cwl
     label: "Secondary analysis via ScanPy"
-  squidpy_analysis:
-    in:
-      assay:
-        source: assay
-      h5ad_file:
-        source: scanpy_analysis/filtered_data_h5ad
-      img_dir:
-        source: img_dir
-    out:
-      - squidpy_annotated_h5ad
-      - neighborhood_enrichment_plot
-      - co_occurrence_plot
-      - interaction_matrix_plot
-      - ripley_plot
-      - centrality_scores_plot
-      - spatial_plot
-    run: salmon-rnaseq/steps/squidpy-analysis.cwl
-    label: "Spatial analysis via SquidPy"
   compute_qc_results:
     in:
       h5ad_primary:
-        source: annotate_cells/annotated_h5ad_file
+        source: quantification/h5ad_file
       h5ad_secondary:
         source: scanpy_analysis/filtered_data_h5ad
       bam_file:

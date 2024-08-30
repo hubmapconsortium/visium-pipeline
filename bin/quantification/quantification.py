@@ -49,49 +49,6 @@ def find_files(directory: Path, pattern: str) -> Iterable[Path]:
                 yield filepath
 
 
-def get_visium_plate_version(directory: Path) -> int:
-    gpr_file = list(find_files(directory, "*.gpr"))[0]
-    return int(gpr_file.stem[1])
-
-
-def get_visium_probe_set_version(
-    directory: Path, probe_set_version_parameter: int = None
-) -> int:
-    probe_set_version_metadata = None
-    maybe_metadata_file = find_metadata_file(directory)
-    if maybe_metadata_file and maybe_metadata_file.is_file():
-        with open(maybe_metadata_file, newline="") as f:
-            r = csv.DictReader(f, delimiter="\t")
-            metadata = next(r)
-            if (
-                metadata_probe_set_version_field in metadata
-                and metadata[metadata_probe_set_version_field].isdigit()
-            ):
-                probe_set_version_metadata = int(
-                    metadata[metadata_probe_set_version_field]
-                )
-                print(
-                    f"Read expected cell count from {maybe_metadata_file}: {probe_set_version_metadata}"
-                )
-
-    present_probe_set_versions = sum(
-        x is not None for x in [probe_set_version_parameter, probe_set_version_metadata]
-    )
-    if present_probe_set_versions == 0:
-        return None
-    elif present_probe_set_versions == 1:
-        return probe_set_version_parameter or probe_set_version_metadata or 0
-    else:
-        if probe_set_version_parameter == probe_set_version_metadata:
-            return probe_set_version_parameter
-        else:
-            message = (
-                f"Found mismatched probe set versions: {probe_set_version_parameter} as parameter, "
-                f"and {probe_set_version_metadata} in {maybe_metadata_file}"
-            )
-            raise ValueError(message)
-
-
 def find_adj_fastq_files(directory: Path) -> Iterable[Tuple[Path, Path]]:
     # not general enough to implement in fastq-utils; very specific
     # to how we create "synthetic" barcode + UMI FASTQ files
@@ -109,30 +66,21 @@ def find_adj_fastq_files(directory: Path) -> Iterable[Tuple[Path, Path]]:
 
 def main(
     trimmed_fastq_dir: Path,
-    metadata_dir: Path,
-    expected_cell_count: Optional[int],
-    keep_all_barcodes: bool,
     threads: Optional[int],
-    visium_probe_set_version: Optional[int],
+    probe_set: Optional[int],
 ):
     threads = threads or 1
 
-    visium_plate_version = get_visium_plate_version(metadata_dir)
-    visium_probe_set_version = get_visium_probe_set_version(
-        metadata_dir, visium_probe_set_version
-    )
-
-    index = f"/opt/v{visium_probe_set_version}.fasta"
-    copy_command = f"ln -s {index} v{visium_probe_set_version}.fasta"
+    index = f"/opt/v{probe_set}.fasta"
+    copy_command = f"ln -s {index} v{probe_set}.fasta"
     check_call(copy_command, shell=True)
-    index = f"v{visium_probe_set_version}.fasta"
+    index = f"v{probe_set}.fasta"
 
     fastq_pairs = list(find_adj_fastq_files(trimmed_fastq_dir))
 
     if not fastq_pairs:
         raise ValueError("No FASTQ files found")
 
-    barcode_file = f"/opt/visium-v{visium_plate_version}.txt"
     r1_fastq_file, r2_fastq_file = fastq_pairs[0]
     BWA_INDEX_COMMAND = f"bwa index {index}"
     check_call(BWA_INDEX_COMMAND, shell=True)
@@ -144,7 +92,7 @@ def main(
     )
     check_call(BWA_COMMAND, shell=True)
 
-    SAMTOOLS_COMMAND = f"samtools view -S -b -t /opt/v{visium_probe_set_version}.fasta.fai out.sam > out.bam && samtools sort -@ {threads} out.bam -o sorted.bam && samtools index sorted.bam"
+    SAMTOOLS_COMMAND = f"samtools view -S -b -t /opt/v{probe_set}.fasta.fai out.sam > out.bam && samtools sort -@ {threads} out.bam -o sorted.bam && samtools index sorted.bam"
 
     check_call(SAMTOOLS_COMMAND, shell=True)
 
@@ -166,7 +114,7 @@ if __name__ == "__main__":
     p.add_argument("--expected-cell-count", type=int)
     p.add_argument("--keep-all-barcodes", action="store_true")
     p.add_argument("-p", "--threads", type=int)
-    p.add_argument("--visium-probe-set-version", type=int, nargs="?")
+    p.add_argument("--probe-set", type=int, nargs="?")
     args = p.parse_args()
 
     main(
@@ -175,5 +123,4 @@ if __name__ == "__main__":
         args.expected_cell_count,
         args.keep_all_barcodes,
         args.threads,
-        args.visium_probe_set_version,
     )

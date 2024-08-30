@@ -34,11 +34,11 @@ inputs:
     inputBinding:
       position: 5
       prefix: "--keep-all-barcodes"
-  visium_probe_set_version:
-    type: int?
+  probe_set:
+    type: str
     inputBinding:
       position: 6
-      prefix: "--visium-probe-set-version"
+      prefix: "--probe-set"
 
 outputs:
   h5ad_file:
