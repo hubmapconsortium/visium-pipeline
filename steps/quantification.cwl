@@ -2,7 +2,7 @@ cwlVersion: v1.0
 class: CommandLineTool
 requirements:
   DockerRequirement:
-    dockerPull: hubmap/visium-quantification
+    dockerPull: hubmap/rna-probes-quantification
   ResourceRequirement:
     ramMin: 28672
 baseCommand: /opt/quantification.py
