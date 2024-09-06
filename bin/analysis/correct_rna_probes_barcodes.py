@@ -38,11 +38,6 @@ def find_files(directory: Path, pattern: str) -> Iterable[Path]:
                 yield filepath
 
 
-def get_visium_plate_version(directory: Path) -> int:
-    gpr_file = list(find_files(directory, "*.gpr"))[0]
-    return int(gpr_file.stem[1])
-
-
 def main(
     metadata_dir: Path,
     fastq_dirs: Iterable[Path],
@@ -50,9 +45,7 @@ def main(
 ):
     output_dir.mkdir(exist_ok=True, parents=True)
 
-    visium_version_number = get_visium_plate_version(metadata_dir)
-
-    barcode_filename = f"/opt/visium-v{visium_version_number}.txt"
+    barcode_filename = "737K-fixed-rna-profiling.txt"
 
     barcode_allowlist = read_barcode_allowlist(barcode_filename)
     correcter = bu.BarcodeCorrecter(barcode_allowlist, edit_distance=1)

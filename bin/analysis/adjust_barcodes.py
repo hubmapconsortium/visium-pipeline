@@ -3,13 +3,13 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import Iterable
 
-import correct_visium_barcodes
+import correct_rna_probes_barcodes
 import manhole
 from common import ADJ_OUTPUT_DIR, Assay
 
 
 def main(metadata_dir: Path, input_dirs: Iterable[Path]):
-    correct_visium_barcodes.main(metadata_dir, input_dirs, output_dir=ADJ_OUTPUT_DIR)
+    correct_rna_probes_barcodes.main(metadata_dir, input_dirs, output_dir=ADJ_OUTPUT_DIR)
 
 
 if __name__ == "__main__":

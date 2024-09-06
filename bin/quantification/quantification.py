@@ -67,7 +67,7 @@ def find_adj_fastq_files(directory: Path) -> Iterable[Tuple[Path, Path]]:
 def main(
     trimmed_fastq_dir: Path,
     threads: Optional[int],
-    probe_set: Optional[int],
+    probe_set: Optional[str],
 ):
     threads = threads or 1
 

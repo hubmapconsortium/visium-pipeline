@@ -16,8 +16,4 @@ COPY bin/analysis /opt
 
 WORKDIR /opt
 
-RUN wget https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/visium/visium-v1.txt
-RUN wget https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/visium/visium-v2.txt
-RUN wget https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/visium/visium-v3.txt
-RUN wget https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/visium/visium-v4.txt
-RUN wget https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/visium/visium-v5.txt
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/737K-fixed-rna-profiling.txt
