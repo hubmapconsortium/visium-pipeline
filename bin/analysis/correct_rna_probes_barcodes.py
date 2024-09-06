@@ -45,7 +45,7 @@ def main(
 ):
     output_dir.mkdir(exist_ok=True, parents=True)
 
-    barcode_filename = "737K-fixed-rna-profiling.txt"
+    barcode_filename = "/opt/737K-fixed-rna-profiling.txt"
 
     barcode_allowlist = read_barcode_allowlist(barcode_filename)
     correcter = bu.BarcodeCorrecter(barcode_allowlist, edit_distance=1)
