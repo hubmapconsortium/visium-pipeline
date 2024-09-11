@@ -19,29 +19,20 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py39_4.12.0-Linu
 
 ENV PATH /opt/conda/bin:$PATH
 
-RUN curl https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/v1_index.tar.gz | tar -xzf -
-RUN curl https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/v2_index.tar.gz | tar -xzf -
-RUN wget https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/visiumv1.tx2gene.tsv
-RUN wget https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/visiumv2.tx2gene.tsv
-RUN wget https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/visium/visium-v1.txt
-RUN wget https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/visium/visium-v2.txt
-RUN wget https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/visium/visium-v3.txt
-RUN wget https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/visium/visium-v4.txt
-RUN wget https://s3.amazonaws.com/hubmap-pipeline-assets/salmon/visium/visium-v5.txt
-RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/v1.fasta
-RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/v1.fasta.fai
-RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/v1.fasta.bwt
-RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/v1.fasta.amb
-RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/v1.fasta.ann
-RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/v1.fasta.sa
-RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/v1.fasta.pac
-RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/v2.fasta
-RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/v2.fasta.fai
-RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/v2.fasta.bwt
-RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/v2.fasta.amb
-RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/v2.fasta.ann
-RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/v2.fasta.sa
-RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/v2.fasta.pac
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/rna-probe-sets/probe-sets/Chromium_Mouse_v1.0.1.fasta
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/rna-probe-sets/probe-sets/Chromium_Mouse_v1.0.1.fasta.fai
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/rna-probe-sets/probe-sets/Chromium_Mouse_v1.0.1.fasta.bwt
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/rna-probe-sets/probe-sets/Chromium_Mouse_v1.0.1.fasta.amb
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/rna-probe-sets/probe-sets/Chromium_Mouse_v1.0.1.fasta.ann
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/rna-probe-sets/probe-sets/Chromium_Mouse_v1.0.1.fasta.sa
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/rna-probe-sets/probe-sets/Chromium_Mouse_v1.0.1.fasta.pac
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/rna-probe-sets/probe-sets/Chromium_v1.0.1.fasta
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/rna-probe-sets/probe-sets/Chromium_v1.0.1.fasta.fai
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/rna-probe-sets/probe-sets/Chromium_v1.0.1.fasta.bwt
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/rna-probe-sets/probe-sets/Chromium_v1.0.1.fasta.amb
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/rna-probe-sets/probe-sets/Chromium_v1.0.1.fasta.ann
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/rna-probe-sets/probe-sets/Chromium_v1.0.1.fasta.sa
+RUN wget https://hubmap-pipeline-assets.s3.amazonaws.com/salmon/rna-probe-sets/probe-sets/Chromium_v1.0.1.fasta.pac
 
 COPY docker/quantification/requirements.txt /opt/requirements.txt
 RUN python3 -m pip install -r /opt/requirements.txt \

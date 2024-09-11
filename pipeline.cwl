@@ -16,17 +16,13 @@ inputs:
   assay:
     label: "scRNA-seq assay"
     type: string
-    default: "visium-ff"
+    default: "10x_v3"
   threads:
-    label: "Number of threads for Salmon"
+    label: "Number of threads for alignment"
     type: int
     default: 1
-  expected_cell_count:
-    type: int?
-  keep_all_barcodes:
-    type: boolean?
-  probe_set:
-    type: str
+  organism:
+    type: string?
 outputs:
   count_matrix_h5ad:
     outputSource: quantification/h5ad_file
@@ -97,16 +93,10 @@ steps:
     in:
       trimmed_fastq_dir:
         source: trim_reads/trimmed_fastq_dir
-      metadata_dir:
-        source: metadata_dir
       threads:
         source: threads
-      expected_cell_count:
-        source: expected_cell_count
-      keep_all_barcodes:
-        source: keep_all_barcodes
-      probe_set:
-        source: probe_set
+      organism:
+        source: organism
     out:
       - h5ad_file
       - bam_file

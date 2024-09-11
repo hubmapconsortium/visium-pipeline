@@ -67,14 +67,15 @@ def find_adj_fastq_files(directory: Path) -> Iterable[Tuple[Path, Path]]:
 def main(
     trimmed_fastq_dir: Path,
     threads: Optional[int],
-    probe_set: Optional[str],
+    organism: Optional[str],
 ):
     threads = threads or 1
+    probe_set = "Chromium_Mouse_v1.0.1" if organism == "mouse" else "Chromium_v1.0.1"
 
-    index = f"/opt/v{probe_set}.fasta"
+    index = f"/opt/{probe_set}.fasta"
     copy_command = f"ln -s {index} v{probe_set}.fasta"
     check_call(copy_command, shell=True)
-    index = f"v{probe_set}.fasta"
+    index = f"{probe_set}.fasta"
 
     fastq_pairs = list(find_adj_fastq_files(trimmed_fastq_dir))
 
@@ -92,7 +93,7 @@ def main(
     )
     check_call(BWA_COMMAND, shell=True)
 
-    SAMTOOLS_COMMAND = f"samtools view -S -b -t /opt/v{probe_set}.fasta.fai out.sam > out.bam && samtools sort -@ {threads} out.bam -o sorted.bam && samtools index sorted.bam"
+    SAMTOOLS_COMMAND = f"samtools view -S -b -t /opt/{probe_set}.fasta.fai out.sam > out.bam && samtools sort -@ {threads} out.bam -o sorted.bam && samtools index sorted.bam"
 
     check_call(SAMTOOLS_COMMAND, shell=True)
 
@@ -110,17 +111,12 @@ if __name__ == "__main__":
 
     p = ArgumentParser()
     p.add_argument("trimmed_fastq_dir", type=Path)
-    p.add_argument("metadata_dir", type=Path)
-    p.add_argument("--expected-cell-count", type=int)
-    p.add_argument("--keep-all-barcodes", action="store_true")
     p.add_argument("-p", "--threads", type=int)
-    p.add_argument("--probe-set", type=int, nargs="?")
+    p.add_argument("--organism", type=str, nargs="?", default="human")
     args = p.parse_args()
 
     main(
         args.trimmed_fastq_dir,
         args.metadata_dir,
-        args.expected_cell_count,
-        args.keep_all_barcodes,
         args.threads,
     )

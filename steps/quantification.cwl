@@ -15,30 +15,16 @@ inputs:
     type: Directory
     inputBinding:
       position: 1
-  metadata_dir:
-    type: Directory
-    inputBinding:
-      position: 2
   threads:
     type: int
     inputBinding:
-      position: 3
+      position: 2
       prefix: "--threads"
-  expected_cell_count:
-    type: int?
+  organism:
+    type: string
     inputBinding:
-      position: 4
-      prefix: "--expected-cell-count"
-  keep_all_barcodes:
-    type: boolean?
-    inputBinding:
-      position: 5
-      prefix: "--keep-all-barcodes"
-  probe_set:
-    type: str
-    inputBinding:
-      position: 6
-      prefix: "--probe-set"
+      position: 3
+      prefix: "--organism"
 
 outputs:
   h5ad_file:
