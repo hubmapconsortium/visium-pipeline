@@ -117,6 +117,6 @@ if __name__ == "__main__":
 
     main(
         args.trimmed_fastq_dir,
-        args.metadata_dir,
         args.threads,
+        args.organism,
     )
