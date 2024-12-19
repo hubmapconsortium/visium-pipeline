@@ -82,20 +82,32 @@ def main(
     if not fastq_pairs:
         raise ValueError("No FASTQ files found")
 
-    r1_fastq_file, r2_fastq_file = fastq_pairs[0]
-    BWA_INDEX_COMMAND = f"bwa index {index}"
-    check_call(BWA_INDEX_COMMAND, shell=True)
-    UMI_EXTRACT_COMMAND = f"umi_tools extract --extract-method=string --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNNNN --stdin {r1_fastq_file} --stdout extracted_barcode_umi.fastq.gz --read2-in={r2_fastq_file} --read2-out=extracted_transcript.fastq.gz"
-    check_call(UMI_EXTRACT_COMMAND, shell=True)
+#    BWA_INDEX_COMMAND = f"bwa index /opt/{index}"
+#    check_call(BWA_INDEX_COMMAND, shell=True)
+    bam_files = []
 
-    BWA_COMMAND = (
-        f"bwa mem -M -t {threads} {index} extracted_transcript.fastq.gz > out.sam"
-    )
-    check_call(BWA_COMMAND, shell=True)
+    for r1_fastq_file, r2_fastq_file in fastq_pairs:
+        UMI_EXTRACT_COMMAND = f"umi_tools extract --extract-method=string --bc-pattern=CCCCCCCCCCCCCCCCNNNNNNNNNNNN --stdin {r1_fastq_file} --stdout extracted_barcode_umi.fastq.gz --read2-in={r2_fastq_file} --read2-out=extracted_transcript.fastq.gz"
+        check_call(UMI_EXTRACT_COMMAND, shell=True)
 
-    SAMTOOLS_COMMAND = f"samtools view -S -b -t /opt/{probe_set}.fasta.fai out.sam > out.bam && samtools sort -@ {threads} out.bam -o sorted.bam && samtools index sorted.bam"
+        BWA_COMMAND = (
+            f"bwa mem -M -t {threads} /opt/{index} extracted_transcript.fastq.gz > out.sam"
+        )
+        check_call(BWA_COMMAND, shell=True)
 
-    check_call(SAMTOOLS_COMMAND, shell=True)
+        SAMTOOLS_COMMAND = f"samtools view -S -b -t /opt/v{probe_set}.fasta.fai out.sam > out.bam && samtools sort -@ {threads} out.bam -o sorted_{len(bam_files)}.bam && samtools index sorted_{len(bam_files)}.bam"
+        bam_files.append(f"sorted_{len(bam_files)}.bam")
+
+        check_call(SAMTOOLS_COMMAND, shell=True)
+
+    MERGE_COMMAND = f"samtools merge sorted.bam "
+    for bam_file in bam_files:
+        MERGE_COMMAND = MERGE_COMMAND + f"{bam_file} "
+
+    check_call(MERGE_COMMAND, shell=True)
+
+    INDEX_COMMAND = "samtools index sorted.bam"
+    check_call(INDEX_COMMAND, shell=True)
 
     UMI_DEDUP_COMMAND = (
         "umi_tools count --per-contig --per-cell -I sorted.bam -S counts.tsv.gz"

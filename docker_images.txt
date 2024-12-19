@@ -1,2 +1,3 @@
 hubmap/rna-probes-quantification	docker/quantification/Dockerfile	base_directory_build
 hubmap/rna-probes-barcode-adj   docker/barcode_adj/Dockerfile   base_directory_build
+hubmap/rna-probes-analysis  docker/analysis/Dockerfile  base_directory_build

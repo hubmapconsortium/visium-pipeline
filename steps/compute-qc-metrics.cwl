@@ -3,7 +3,7 @@ class: CommandLineTool
 label: Compute QC metrics
 requirements:
   DockerRequirement:
-    dockerPull: hubmap/visium-analysis:latest
+    dockerPull: hubmap/rna-probes-analysis:latest
 baseCommand: /opt/compute_qc_metrics.py
 
 inputs:
