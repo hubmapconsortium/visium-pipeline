@@ -133,8 +133,6 @@ steps:
     in:
       h5ad_primary:
         source: quantification/h5ad_file
-      h5ad_secondary:
-        source: scanpy_analysis/filtered_data_h5ad
       bam_file:
         source: quantification/bam_file
     out:

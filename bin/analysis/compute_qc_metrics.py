@@ -76,7 +76,7 @@ def write_alignment_qc(bam_file):
         "mapping_quality": five_number_dict,
     }
 
-    output_file = Path("alignment_qc_report.json")
+    output_file = Path("alignment_qc_results.json")
     logging.info(f"Writing QC measures to {output_file}")
     with open(output_file, "w") as text_file:
         json.dump(qc_report, text_file, indent=4)
@@ -92,9 +92,8 @@ def main(h5ad_primary: Path, bam_file: Path):
 if __name__ == "__main__":
     manhole.install(activate_on="USR1")
     p = ArgumentParser()
-    p.add_argument("assay", choices=list(Assay), type=Assay)
     p.add_argument("h5ad_primary", type=Path)
     p.add_argument("bam_file", type=Path)
     args = p.parse_args()
 
-    main(args.assay, args.h5ad_primary, args.bam_file)
+    main(args.h5ad_primary, args.bam_file)
