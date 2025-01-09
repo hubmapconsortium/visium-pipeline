@@ -76,7 +76,7 @@ def write_alignment_qc(bam_file):
         "mapping_quality": five_number_dict,
     }
 
-    output_file = Path("alignment_qc_report.json")
+    output_file = Path("alignment_qc_results.json")
     logging.info(f"Writing QC measures to {output_file}")
     with open(output_file, "w") as text_file:
         json.dump(qc_report, text_file, indent=4)
