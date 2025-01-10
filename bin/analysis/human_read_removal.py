@@ -18,6 +18,18 @@ READ_REMOVAL_COMMAND_TEMPLATE = [
 ]
 
 
+def unzip_input_file(input_file: Path) -> Path:
+    if ".gz" in input_file.suffixes:
+        unzip_command = f"gunzip {input_file}"
+        check_call(unzip_command, shell=True)
+        return input_file.parent / Path(input_file.stem)
+    else:
+        return input_file
+
+def zip_output_file(output_file: Path):
+    zip_command = f"gzip {output_file}"
+    check_call(zip_command, shell=True)
+
 def single_file_human_read_remove(fastq_file_and_subdir: Tuple[Path, Path], threads: int):
     """
     Run human read removal on a single fastq file
@@ -25,16 +37,14 @@ def single_file_human_read_remove(fastq_file_and_subdir: Tuple[Path, Path], thre
     Takes an absolute path to the input file and a relative path to
     the output subdirectory
     """
-    print(f"input_path: {fastq_file_and_subdir[0]}")
-    print(f"output_dir: {fastq_file_and_subdir[1]}")
-    print(f"output_path: {fastq_file_and_subdir[1] / fastq_file_and_subdir[0].name}")
 
     input_path = fastq_file_and_subdir[0]
+    unzipped_input_path = unzip_input_file(input_path)
     output_path = fastq_file_and_subdir[1] / fastq_file_and_subdir[0].name
-    command = [piece.format(input_path=input_path, out_path=output_path, threads=threads) for piece in READ_REMOVAL_COMMAND_TEMPLATE]
+    command = [piece.format(input_path=unzipped_input_path, out_path=output_path, threads=threads) for piece in READ_REMOVAL_COMMAND_TEMPLATE]
     print("Running", " ".join(command))
     check_call(command, shell=True)
-
+    zip_output_file(output_path)
 
 def main(directory: Path, threads: int):
     """
