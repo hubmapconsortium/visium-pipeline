@@ -29,7 +29,7 @@ def single_file_human_read_remove(fastq_file_and_subdir: Tuple[Path, Path], thre
     output_path = fastq_file_and_subdir[1] / fastq_file_and_subdir[0]
     command = [piece.format(input_path = input_path, out_path = output_path, threads=threads) for piece in READ_REMOVAL_COMMAND_TEMPLATE]
     print("Running", " ".join(command))
-    check_call(command)
+    check_call(command, shell=True)
 
 
 def main(directory: Path, threads: int):
