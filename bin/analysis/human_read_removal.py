@@ -11,7 +11,7 @@ READ_REMOVAL_COMMAND_TEMPLATE = [
     "/opt/scrubber/scripts/scrub.sh",
     "-i",
     "{input_path}",
-    "-o"
+    "-o",
     "{out_path}",
     "-p",
     "{threads}"
