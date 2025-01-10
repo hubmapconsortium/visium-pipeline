@@ -26,7 +26,7 @@ def single_file_human_read_remove(fastq_file_and_subdir: Tuple[Path, Path], thre
     the output subdirectory
     """
     input_path = fastq_file_and_subdir[0]
-    output_path = fastq_file_and_subdir[0] / fastq_file_and_subdir[1]
+    output_path = fastq_file_and_subdir[1] / fastq_file_and_subdir[0]
     command = [piece.format(input_path = input_path, out_path = output_path, threads=threads) for piece in READ_REMOVAL_COMMAND_TEMPLATE]
     print("Running", " ".join(command))
     check_call(command)
@@ -39,10 +39,10 @@ def main(directory: Path, threads: int):
     fastq_files_by_directory = collect_fastq_files_by_directory(directory)
     print("Found", len(fastq_files_by_directory), "directories containing FASTQ files")
 
-    fastqc_out_dir = Path("sanitized_fastqs")
+    out_dir = Path("sanitized_fastqs")
 
     for directory, files in fastq_files_by_directory.items():
-        subdir = fastqc_out_dir / directory
+        subdir = out_dir / directory
         subdir.mkdir(exist_ok=True, parents=True)
         for file in files:
             single_file_human_read_remove((file, subdir), threads)
