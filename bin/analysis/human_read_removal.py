@@ -25,9 +25,13 @@ def single_file_human_read_remove(fastq_file_and_subdir: Tuple[Path, Path], thre
     Takes an absolute path to the input file and a relative path to
     the output subdirectory
     """
+    print(f"input_path: {fastq_file_and_subdir[0]}")
+    print(f"output_dir: {fastq_file_and_subdir[1]}")
+    print(f"output_path: {fastq_file_and_subdir[1] / fastq_file_and_subdir[0]}")
+
     input_path = fastq_file_and_subdir[0]
     output_path = fastq_file_and_subdir[1] / fastq_file_and_subdir[0]
-    command = [piece.format(input_path = input_path, out_path = output_path, threads=threads) for piece in READ_REMOVAL_COMMAND_TEMPLATE]
+    command = [piece.format(input_path=input_path, out_path=output_path, threads=threads) for piece in READ_REMOVAL_COMMAND_TEMPLATE]
     print("Running", " ".join(command))
     check_call(command, shell=True)
 
