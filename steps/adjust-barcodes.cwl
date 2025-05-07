@@ -3,7 +3,7 @@ class: CommandLineTool
 label: Assay-specific adjustment of cell barcodes
 requirements:
   DockerRequirement:
-    dockerPull: hubmap/visium-barcode-adj:1.1.2
+    dockerPull: hubmap/visium-barcode-adj
 baseCommand: /opt/adjust_barcodes.py
 
 inputs:
