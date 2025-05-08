@@ -92,9 +92,8 @@ def main(h5ad_primary: Path, bam_file: Path):
 if __name__ == "__main__":
     manhole.install(activate_on="USR1")
     p = ArgumentParser()
-    p.add_argument("assay", choices=list(Assay), type=Assay)
     p.add_argument("h5ad_primary", type=Path)
     p.add_argument("bam_file", type=Path)
     args = p.parse_args()
 
-    main(args.assay, args.h5ad_primary, args.bam_file)
+    main(args.h5ad_primary, args.bam_file)
