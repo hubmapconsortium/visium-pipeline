@@ -3,7 +3,7 @@ class: CommandLineTool
 label: Runs NCBI's human read removal tool on each fastq file in fastq directory
 requirements:
   DockerRequirement:
-    dockerPull: hubmap/human-read-removal:1.1.5
+    dockerPull: hubmap/human-read-removal
 baseCommand: /opt/human_read_removal.py
 
 inputs:
