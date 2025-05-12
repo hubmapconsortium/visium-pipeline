@@ -2,7 +2,7 @@ cwlVersion: v1.0
 class: CommandLineTool
 requirements:
   DockerRequirement:
-    dockerPull: hubmap/visium-trim-reads:latest
+    dockerPull: hubmap/visium-trim-reads:1.1.5
 baseCommand: /opt/trim_reads.py
 label: Trim FASTQ files
 
