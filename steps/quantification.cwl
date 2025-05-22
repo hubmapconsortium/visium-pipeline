@@ -2,7 +2,7 @@ cwlVersion: v1.0
 class: CommandLineTool
 requirements:
   DockerRequirement:
-    dockerPull: hubmap/visium-quantification
+    dockerPull: hubmap/visium-quantification:1.1.6
   ResourceRequirement:
     ramMin: 28672
 baseCommand: /opt/quantification.py
