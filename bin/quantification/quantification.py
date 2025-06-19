@@ -2,25 +2,25 @@
 import csv
 import re
 from argparse import ArgumentParser
-from os import environ, fspath, walk
+from os import walk
 from pathlib import Path
-from subprocess import CalledProcessError, check_call, check_output
-from typing import Iterable, Optional, Sequence, Tuple
+from subprocess import check_call
+from typing import Dict, Iterable, Optional, Tuple
 
 import anndata
+import json
 import manhole
-import pandas as pd
-import simplesam
 from common import (
     BARCODE_UMI_FASTQ_PATH,
     TRANSCRIPT_FASTQ_GZ_PATH,
     TRANSCRIPT_FASTQ_PATH,
     Assay,
 )
-from fastq_utils import find_grouped_fastq_files
+from fastq_utils import smart_open
 
 base_index = "/opt/gencode.v35.intron-exon.sidx"
 base_transcript_map = "/opt/gencode.v35.annotation.expanded.tx2gene.tsv"
+DEFAULT_HUGO_ENSEMBL_MAPPING_PATH = "/opt/ensembl_hugo_mapping.json.xz"
 
 cell_count_filename = "extras/expected_cell_count.txt"
 metadata_filename_pattern = re.compile(r"^[0-9A-Fa-f]{32}-metadata.tsv$")
@@ -28,6 +28,31 @@ metadata_cell_count_field = "expected_cell_count"
 metadata_probe_set_version_field = "visium_probe_set_version"
 barcode_whitelist_path = Path("barcode_whitelist.txt")
 
+class EnsemblHugoMapper:
+    mapping: Dict[str, str]
+
+    def __init__(self):
+        self.mapping = {}
+
+    @classmethod
+    def populate(cls, path: Path):
+        self = cls()
+        with smart_open(path) as f:
+            self.mapping.update(json.load(f))
+
+        versioned_ensembl_ids = set(self.mapping.keys())
+        unversioned_mapping_dict = {key.split('.')[0]:self.mapping[key] for key in versioned_ensembl_ids}
+        self.mapping.update(unversioned_mapping_dict)
+
+        return self
+
+    def annotate(self, data: anndata.AnnData):
+
+        symbols = [self.mapping.get(e) for e in data.var.index]
+        data.var.loc[
+            :,
+            "hugo_symbol",
+        ] = symbols
 
 def find_metadata_file(directory: Path) -> Optional[Path]:
     """
@@ -154,6 +179,11 @@ def main(
     check_call(UMI_DEDUP_COMMAND, shell=True)
 
     adata = anndata.read_umi_tools("counts.tsv.gz")
+
+    ensembl_hugo_mapper = EnsemblHugoMapper.populate(DEFAULT_HUGO_ENSEMBL_MAPPING_PATH)
+
+    ensembl_hugo_mapper.annotate(adata)
+
     adata.write("expr.h5ad")
 
 

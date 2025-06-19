@@ -55,3 +55,4 @@ RUN mkdir /out
 
 COPY bin/common /opt
 COPY bin/quantification /opt
+COPY salmon-rnaseq/data/ensembl_hugo_mapping.json.xz /opt
